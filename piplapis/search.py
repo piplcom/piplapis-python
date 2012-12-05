@@ -26,8 +26,8 @@ from piplapis.data.utils import Serializable
 
 # Default API key value, you can set your key globally in this variable instead 
 # of passing it to each request object.
-# >>> import piplapis.name
-# >>> piplapis.name.default_api_key = '<your_key>'
+# >>> import piplapis.search
+# >>> piplapis.search.default_api_key = '<your_key>'
 default_api_key = None
 
 
