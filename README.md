@@ -30,8 +30,3 @@ Getting Started & Code Snippets
 **Pipl's Thumbnail API**
 * Getting started tutorial - [http://dev.pipl.com/docs/thumbnail_api/getstarted](http://dev.pipl.com/docs/thumbnail_api/getstarted)  
 * Code snippets - [http://dev.pipl.com/docs/thumbnail_api/code](http://dev.pipl.com/docs/thumbnail_api/code)  
-
-Credits
--------
-
-Thanks to [bananamask](https://github.com/bananamask) for writing this library!
