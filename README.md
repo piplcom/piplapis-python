@@ -4,7 +4,7 @@ piplapis Python Library
 This is a Python client library for easily integrating Pipl's APIs into your application.
 
 * Full details about Pipl's APIs - [http://dev.pipl.com](http://dev.pipl.com)  
-* This library is available in other languages - [http://dev.pipl.com/libraries](http://dev.pipl.com/libraries)
+* This library is available in other languages - [http://dev.pipl.com/docs/libraries](http://dev.pipl.com/docs/libraries)
 
 Library Requirements
 --------------------
