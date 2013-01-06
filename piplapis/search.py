@@ -564,10 +564,10 @@ class SearchAPIResponse(Serializable):
     def from_dict(d):
         """Transform the dict to a response object and return the response."""
         warnings_ = d.get('warnings', [])
-        query = d.get('query')
+        query = d.get('query') or None
         if query:
             query = Person.from_dict(query)
-        person = d.get('person')
+        person = d.get('person') or None
         if person:
             person = Person.from_dict(person)
         records = d.get('records')
