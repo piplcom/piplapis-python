@@ -223,7 +223,7 @@ class Address(Field):
         disp = u', '.join(filter(None, vals))
         if self.street and (self.house or self.apartment):
             prefix = u'-'.join([val for val in (self.house, self.apartment) 
-                                if val is not None])
+                                if val])
             disp = prefix + u' ' + (disp or u'')
         if self.po_box and not self.street:
             disp = u' '.join([u'P.O. Box', self.po_box, (disp or u'')])
