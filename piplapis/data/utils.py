@@ -48,7 +48,7 @@ def str_to_datetime(s):
 
 def datetime_to_str(dt):
     """Transform a datetime object to an str object."""
-    return dt.strftime(TIMESTAMP_FORMAT)
+    return dt.isoformat()
 
 
 def str_to_date(s):
@@ -58,7 +58,7 @@ def str_to_date(s):
 
 def date_to_str(d):
     """Transform a date object to an str object."""
-    return d.strftime(DATE_FORMAT)
+    return d.isoformat()
 
 
 def is_valid_url(url):
