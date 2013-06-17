@@ -385,7 +385,10 @@ class SearchAPIRequest(object):
             json_error = e.read()
             if not json_error:
                 raise e
-            raise SearchAPIError.from_json(json_error)
+            try:
+                raise SearchAPIError.from_json(json_error)
+            except ValueError:
+                raise e
         return SearchAPIResponse.from_json(json_response)
     
     def send_async(self, callback, strict_validation=True):
