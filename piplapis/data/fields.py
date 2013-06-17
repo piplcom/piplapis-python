@@ -98,7 +98,7 @@ class Field(Serializable):
                 val = str_to_datetime(val)
             elif key == 'date_range':
                 val = DateRange.from_dict(val)
-            kwargs[key] = val
+            kwargs[key.encode('ascii')] = val
         return cls(**kwargs)
         
     def to_dict(self):
