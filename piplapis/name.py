@@ -52,6 +52,8 @@ class NameAPIRequest(object):
     
     HEADERS = {'User-Agent': 'piplapis/python/%s' % piplapis.__version__}
     BASE_URL = 'http://api.pipl.com/name/v2/json/?'
+	# HTTPS is also supported:
+	#BASE_URL = 'https://api.pipl.com/name/v2/json/?'
     
     def __init__(self, api_key=None, first_name=None, middle_name=None, 
                  last_name=None, raw_name=None):

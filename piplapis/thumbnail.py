@@ -21,6 +21,9 @@ from piplapis.data.utils import to_utf8
 
 
 BASE_URL = 'http://api.pipl.com/thumbnail/v2/?'
+# HTTPS is also supported:
+#BASE_URL = 'https://api.pipl.com/thumbnail/v2/?'
+
 MAX_PIXELS = 500
 
 
