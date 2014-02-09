@@ -330,7 +330,7 @@ class Phone(Field):
         888777666
         
         """
-        number = int(filter(str.isdigit, text))
+        number = int(filter(unicode.isdigit, unicode(text)))
         return Phone(number=number)
         
     @classmethod
