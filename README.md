@@ -23,10 +23,6 @@ Getting Started & Code Snippets
 * Getting started tutorial - [http://dev.pipl.com/docs/search_api/getstarted](http://dev.pipl.com/docs/search_api/getstarted)  
 * Code snippets - [http://dev.pipl.com/docs/search_api/code](http://dev.pipl.com/docs/search_api/code)  
 
-**Pipl's Name API**
-* Getting started tutorial - [http://dev.pipl.com/docs/name_api/getstarted](http://dev.pipl.com/docs/name_api/getstarted)  
-* Code snippets - [http://dev.pipl.com/docs/name_api/code](http://dev.pipl.com/docs/name_api/code)  
-
 **Pipl's Thumbnail API**
 * Getting started tutorial - [http://dev.pipl.com/docs/thumbnail_api/getstarted](http://dev.pipl.com/docs/thumbnail_api/getstarted)  
 * Code snippets - [http://dev.pipl.com/docs/thumbnail_api/code](http://dev.pipl.com/docs/thumbnail_api/code)  

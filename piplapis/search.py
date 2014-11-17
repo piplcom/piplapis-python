@@ -379,8 +379,15 @@ class SearchAPIRequest(object):
         
         """
         self.validate_query_params(strict=strict_validation)
-        request = urllib2.Request(url=self.url, 
-                                  headers=SearchAPIRequest.HEADERS)
+        query = {
+            'key': self.api_key or default_api_key,
+            'person': self.person.to_json(),
+            'query_params_mode': self.query_params_mode,
+            'exact_name': self.exact_name,
+            'prioritize_records_by': ','.join(self._prioritize_records_by),
+            'filter_records_by': self._filter_records_by,
+        }
+        request = urllib2.Request(url=SearchAPIRequest.BASE_URL, data=urllib.urlencode(query, True), headers=SearchAPIRequest.HEADERS)
         try:
             json_response = urllib2.urlopen(request).read()
         except urllib2.HTTPError as e:
