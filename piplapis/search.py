@@ -73,7 +73,7 @@ class SearchAPIRequest(object):
     """
     
     HEADERS = {'User-Agent': 'piplapis/python/%s' % piplapis.__version__}
-    BASE_URL = 'http://api.pipl.com/search/v3/json/?'
+    BASE_URL = 'http://localhost:8000/apis/search/v4/?'
     # HTTPS is also supported:
     #BASE_URL = 'https://api.pipl.com/search/v3/json/?'
     
@@ -435,9 +435,9 @@ class SearchAPIResponse(Serializable):
     
     """A response from Pipl's Search API.
     
-    A response comprises the two things returned as a result to your query:
+    A response comprises the three things returned as a result to your query:
     
-    - A person (piplapis.data.containers.Person) that is the deta object 
+    - A person (piplapis.data.containers.Person) that is the data object 
       representing all the information available for the person you were 
       looking for.
       This object will only be returned when our identity-resolution engine is
@@ -451,14 +451,17 @@ class SearchAPIResponse(Serializable):
       "Eric Cartman, Age 22, From South Park, CO, US", you can expect to get 
       a response containing a single person object.
     
-    - A list of records (piplapis.data.containers.Record) that fully/partially 
+    - A list of possible persons (piplapis.data.containers.Person). If our identity-resolution
+      engine did not find a definite match, you can use this list to further
+      drill down using the persons' search_pointer field.
+
+    - A list of sources (piplapis.data.containers.Source) that fully/partially 
       match the person from your query, if the query was for "Eric Cartman from 
-      Colorado US" the response might also contain records of "Eric Cartman 
-      from US" (without Colorado), if you need to differentiate between records 
+      Colorado US" the response might also contain sources of "Eric Cartman 
+      from US" (without Colorado), if you need to differentiate between sources 
       with full match to the query and partial match or if you want to get a
-      score on how likely is that record to be related to the person you are
-      searching please refer to the record's attributes 
-      record.query_params_match and record.query_person_match.
+      score on how likely is that source to be related to the person you are
+      searching please refer to the source's "match" field. 
     
     The response also contains the query as it was interpreted by Pipl. This 
     part is useful for verification and debugging, if some query parameters 
@@ -474,15 +477,15 @@ class SearchAPIResponse(Serializable):
     
     """
     
-    def __init__(self, query=None, person=None, records=None, 
-                 suggested_searches=None, warnings_=None):
+    def __init__(self, query=None, person=None, sources=None, 
+                 possible_persons=None, warnings_=None):
         """Args:
         
         query -- A Person object with the query as interpreted by Pipl.
         person -- A Person object with data about the person in the query.
-        records -- A list of Record objects with full/partial match to the 
+        sources -- A list of Source objects with full/partial match to the 
                    query.
-        suggested_searches -- A list of Record objects, each of these is an 
+        possible_persons -- A list of Person objects, each of these is an 
                               expansion of the original query, giving additional
                               query parameters to zoom in on the right person.
         warnings_ -- A list of unicodes. A warning is returned when the query 
@@ -491,8 +494,8 @@ class SearchAPIResponse(Serializable):
         """
         self.query = query
         self.person = person
-        self.records = records or []
-        self.suggested_searches = suggested_searches or []
+        self.sources = sources or []
+        self.possible_persons = possible_persons or []
         self.warnings = warnings_ or []
         
     @property
@@ -550,26 +553,15 @@ class SearchAPIResponse(Serializable):
         key_function = lambda record: record.source.category
         return self.group_records(key_function)
     
-    def group_records_by_query_params_match(self):
-        """Return the records grouped by their query_params_match attribute.
+    def group_sources_by_match(self):
+        """Return the sources grouped by their match attribute.
         
-        The return value is a dict, a key in this dict is a query_params_match
-        bool (so the keys can be just True or False) and the value is a list 
-        of all the records with this query_params_match value.
-        
-        """
-        key_function = lambda record: record.query_params_match
-        return self.group_records(key_function)
-    
-    def group_records_by_query_person_match(self):
-        """Return the records grouped by their query_person_match attribute.
-        
-        The return value is a dict, a key in this dict is a query_person_match
+        The return value is a dict, a key in this dict is a match
         float and the value is a list of all the records with this 
-        query_person_match value.
+        match value.
         
         """
-        key_function = lambda record: record.query_person_match
+        key_function = lambda source: source.match
         return self.group_records(key_function)
     
     @staticmethod
@@ -582,15 +574,12 @@ class SearchAPIResponse(Serializable):
         person = d.get('person') or None
         if person:
             person = Person.from_dict(person)
-        records = d.get('records')
-        if records:
-            records = [Record.from_dict(record) for record in records]
-        suggested_searches = d.get('suggested_searches')
-        if suggested_searches:
-            suggested_searches = [Record.from_dict(record) 
-                                  for record in suggested_searches]
-        return SearchAPIResponse(query=query, person=person, records=records, 
-                                 suggested_searches=suggested_searches,
+        sources = d.get('sources')
+        if sources:
+            sources = [Source.from_dict(source) for source in source]
+        possible_persons = [Person.from_dict(x) for x in d.get('possible_persons', [])]
+        return SearchAPIResponse(query=query, person=person, sources=sources,
+                                 possible_persons=possible_persons,
                                  warnings_=warnings_)
     
     def to_dict(self):
@@ -602,16 +591,14 @@ class SearchAPIResponse(Serializable):
             d['query'] = self.query.to_dict()
         if self.person is not None:
             d['person'] = self.person.to_dict()
-        if self.records:
-            d['records'] = [record.to_dict() for record in self.records]
-        if self.suggested_searches:
-            d['suggested_searches'] = [record.to_dict() 
-                                       for record in self.suggested_searches]
+        if self.sources:
+            d['sources'] = [source.to_dict() for source in self.sources]
+        if self.possible_persons:
+            d['possible_persons'] = [person.to_dict() for person in self.possible_persons]
         return d
-        
+
 
 class SearchAPIError(APIError):
-    
     """An exception raised when the response from the search API contains an 
     error."""
     

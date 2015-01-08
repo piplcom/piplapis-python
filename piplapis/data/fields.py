@@ -5,8 +5,8 @@ from piplapis.data.utils import *
 
 
 __all__ = ['Name', 'Address', 'Phone', 'Email', 'Job', 'Education', 'Image', 
-           'Username', 'UserID', 'DOB', 'RelatedURL', 'Relationship', 'Tag',
-           'DateRange']
+           'Username', 'UserID', 'DOB', 'URL',
+           'DateRange', 'Ethnicity', 'Language', 'OriginCountry', 'Gender']
 
 
 class Field(Serializable):
@@ -16,8 +16,9 @@ class Field(Serializable):
     attributes = ()
     children = ('content',)
     
-    def __init__(self, valid_since=None):
+    def __init__(self, valid_since=None, inferred=None):
         self.valid_since = valid_since
+        self.inferred = inferred
     
     def __setattr__(self, attr, value):
         """Extend the default object.__setattr___ and make sure that str values 
@@ -118,6 +119,54 @@ class Field(Serializable):
         return d
         
     
+
+class Gender(Field):
+    children = ('content', )
+    
+    genders = set(['male', 'female'])
+
+    def __init__(self, content=None, valid_since=None, inferred=None):
+        """
+        `content` is the gender value. One of Gender.genders.
+
+        `valid_since` is a datetime.datetime object, it's the first time Pipl's
+        crawlers found this data on the page.
+        """
+        super(Gender, self).__init__(valid_since)
+        if content.lower() not in self.genders:
+            raise ValueError("Gender unknown")
+        self.content = content.lower()
+
+    @property
+    def display(self):
+        if self.content:
+            return self.content.title()
+
+class Ethnicity(Field):
+    children = ('content', )
+    
+    ethnicities = set(['white', 'black', 'american indian', 'alaska native', 
+                       'asian indian', 'chinese', 'filipino', 'other asian', 'japanese', 
+                       'korean', 'viatnamese', 'native hawaiian', 'guamanian', 
+                       'chamorro', 'samoan', 'other pacific islander', 'other'])
+
+    def __init__(self, content=None, valid_since=None, inferred=None):
+        """
+        `content` is the ethnicity value. One of Ethnicity.ethnicities.
+
+        `valid_since` is a datetime.datetime object, it's the first time Pipl's
+        crawlers found this data on the page.
+        """
+        super(Ethnicity, self).__init__(valid_since)
+        if content.lower() not in self.ethnicities:
+            raise ValueError("Ethnicity unknown")
+        self.content = content.lower()
+
+    @property
+    def display(self):
+        if self.content:
+            return self.content.title()
+        
 class Name(Field):
     
     """A name of a person."""
@@ -127,7 +176,7 @@ class Name(Field):
     types_set = set(['present', 'maiden', 'former', 'alias'])
     
     def __init__(self, prefix=None, first=None, middle=None, last=None, 
-                 suffix=None, raw=None, type_=None, valid_since=None):
+                 suffix=None, raw=None, type_=None, valid_since=None, inferred=None):
         """`prefix`, `first`, `middle`, `last`, `suffix`, `raw`, `type_`, 
         should all be unicode objects or utf8 encoded strs (will be decoded 
         automatically).
@@ -174,15 +223,15 @@ class Address(Field):
     """An address of a person."""
     
     attributes = ('type',)
-    children = ('country', 'state', 'city', 'po_box', 
+    children = ('country', 'state', 'city', 'po_box', 'zip_code',
                 'street', 'house', 'apartment', 'raw')
     types_set = set(['home', 'work', 'old'])
     
     def __init__(self, country=None, state=None, city=None, po_box=None, 
-                 street=None, house=None, apartment=None, raw=None, type_=None, 
-                 valid_since=None):
+                 street=None, house=None, zip_code=None, apartment=None, raw=None, 
+                 type_=None, valid_since=None, inferred=None):
         """`country`, `state`, `city`, `po_box`, `street`, `house`, `apartment`, 
-        `raw`, `type_`, should all be unicode objects or utf8 encoded strs 
+        `raw`, `zip_code` and `type_` should all be unicode objects or utf8 encoded strs 
         (will be decoded automatically).
         
         `country` and `state` are country code (like "US") and state code 
@@ -206,6 +255,7 @@ class Address(Field):
         self.country = country
         self.state = state
         self.city = city
+        self.zip_code = zip_code
         self.po_box = po_box
         self.street = street
         self.house = house
@@ -219,7 +269,7 @@ class Address(Field):
         the object in your application."""
         country = self.country if self.state else self.country_full
         state = self.state if self.city else self.state_full
-        vals = (self.street, self.city, state, country)
+        vals = (self.street, self.city, state, self.zip_code, country)
         disp = u', '.join(filter(None, vals))
         if self.street and (self.house or self.apartment):
             prefix = u'-'.join([val for val in (self.house, self.apartment) 
@@ -228,14 +278,16 @@ class Address(Field):
         if self.po_box and not self.street:
             disp = u' '.join([u'P.O. Box', self.po_box, (disp or u'')])
         return disp
-            
+   
     @property
     def is_searchable(self):
-        """A bool value that indicates whether the address is a valid address 
+        """A bool value that indicates whether the address is a valid address
         to search by."""
-        return self.raw or (self.is_valid_country and 
-                            (not self.state or self.is_valid_state))
-    
+        return (self.is_valid_country and self.zip_code) or \
+               (self.raw) or \
+               (self.is_valid_country and self.is_valid_state) or \
+               (self.is_valid_country and not self.state)
+
     @property
     def is_valid_country(self):
         """A bool value that indicates whether the object's country is a valid 
@@ -290,7 +342,7 @@ class Phone(Field):
                      'work_fax', 'pager'])
     
     def __init__(self, country_code=None, number=None, extension=None,
-                 type_=None, valid_since=None):
+                 type_=None, valid_since=None, inferred=None):
         """`country_code`, `number` and `extension` should all be int/long.
         
         `type_` is one of Phone.types_set.
@@ -358,16 +410,22 @@ class Email(Field):
     
     """
     
-    attributes = ('type',)
+    attributes = ('type', 'disposable', 'email_provider')
     children = ('address', 'address_md5')
     types_set = set(['personal', 'work'])
     re_email = re.compile('^[\w.%\-+]+@[\w.%\-]+\.[a-zA-Z]{2,6}$')
     
     def __init__(self, address=None, address_md5=None, type_=None, 
-                 valid_since=None):
+                 disposable=None, email_provider=None, valid_since=None, inferred=None):
         """`address`, `address_md5`, `type_` should be unicode objects or utf8 
         encoded strs (will be decoded automatically).
         
+        `disposable` is a bool, indicating whether this is an 
+        address from a disposable email service.
+
+        `email_provider` is a boolean indicating whether this email 
+        is provided by a public email provider (such as gmail, outlook.com, etc).
+
         `type_` is one of Email.types_set.
         
         `valid_since` is a datetime.datetime object, it's the first time Pipl's
@@ -378,6 +436,8 @@ class Email(Field):
         self.address = address
         self.address_md5 = address_md5
         self.type = type_
+        self.email_provider = email_provider
+        self.disposable = disposable
     
     @property
     def is_valid_email(self):
@@ -432,7 +492,7 @@ class Job(Field):
     children = ('title', 'organization', 'industry', 'date_range')
 
     def __init__(self, title=None, organization=None, industry=None,
-                 date_range=None, valid_since=None):
+                 date_range=None, valid_since=None, inferred=None):
         """`title`, `organization`, `industry`, should all be unicode objects 
         or utf8 encoded strs (will be decoded automatically).
         
@@ -477,7 +537,7 @@ class Education(Field):
     children = ('degree', 'school', 'date_range')
     
     def __init__(self, degree=None, school=None, date_range=None,
-                 valid_since=None):
+                 valid_since=None, inferred=None):
         """`degree` and `school` should both be unicode objects or utf8 encoded 
         strs (will be decoded automatically).
         
@@ -512,7 +572,7 @@ class Image(Field):
     
     children = ('url',)
     
-    def __init__(self, url=None, valid_since=None):
+    def __init__(self, url=None, valid_since=None, inferred=None):
         """`url` should be a unicode object or utf8 encoded str (will be decoded 
         automatically).
         
@@ -529,6 +589,48 @@ class Image(Field):
         return bool(self.url and is_valid_url(self.url))
     
 
+class OriginCountry(Field):
+    
+    """An origin country of the person.
+    """
+    
+    children = ('country', )
+
+    def __init__(self, country=None, valid_since=None, inferred=None):
+        """`country` is the country itself, it should be a unicode object or 
+        a utf8 encoded str (will be decoded automatically). Possible values are 
+        two-letter country codes.
+        
+        `valid_since` is a datetime.datetime object, it's the first time Pipl's
+        crawlers found this data on the page.
+        
+        """
+        Field.__init__(self, valid_since)
+        self.country = country
+    
+class Language(Field):
+    
+    """A language the person is familiar with."""
+    
+    children = ('language', 'region')
+
+    def __init__(self, language=None, region=None, valid_since=None, inferred=None):
+        """`language` and `region` should be unicode objects 
+        or utf8 encoded strs (will be decoded automatically).
+        
+        `valid_since` is a datetime.datetime object, it's the first time Pipl's
+        crawlers found this data on the page.
+        
+        """
+        Field.__init__(self, valid_since)
+        self.language = language
+        self.region = region
+
+    def display(self):
+        if self.language and self.region:
+            return u"{}_{}".format(self.language, self.region)
+        return self.language or self.region
+ 
 class Username(Field):
     
     """A username/screen-name associated with the person.
@@ -539,7 +641,7 @@ class Username(Field):
     
     """
     
-    def __init__(self, content=None, valid_since=None):
+    def __init__(self, content=None, valid_since=None, inferred=None):
         """`content` is the username itself, it should be a unicode object or 
         a utf8 encoded str (will be decoded automatically).
         
@@ -566,7 +668,7 @@ class UserID(Field):
     
     """
     
-    def __init__(self, content=None, valid_since=None):
+    def __init__(self, content=None, valid_since=None, inferred=None):
         """`content` is the ID itself, it should be a unicode object or a utf8 
         encoded str (will be decoded automatically).
         
@@ -588,7 +690,7 @@ class DOB(Field):
     
     children = ('date_range',)
 
-    def __init__(self, date_range=None, valid_since=None):
+    def __init__(self, date_range=None, valid_since=None, inferred=None):
         """`date_range` is A DateRange object (piplapis.data.fields.DateRange), 
         the date-of-birth is within this range.
         
@@ -695,103 +797,46 @@ class DOB(Field):
         return DOB(date_range=date_range) 
     
 
-class RelatedURL(Field):
+class URL(Field):
     
-    """A URL that's related to a person (blog, personal page in the work 
-    website, profile in some other website).
-    
-    IMPORTANT: This URL is NOT the origin of the data about the person, it's 
-    just an extra piece of information available on him.
-    
+    """A URL that's related to a person. Can either be a source of data 
+    about the person, or a URL otherwise related to the person.
     """
-    
-    attributes = ('type',)
-    types_set = set(['personal', 'work', 'blog'])
-    
-    def __init__(self, content=None, type_=None, valid_since=None):
-        """`content` is the URL address itself, both content and type_ should 
-        be unicode objects or utf8 encoded strs (will be decoded automatically).
+
+    attributes = ('category', 'sponsored', 'domain', 'name')
+    children = ('url', )
+    categories_set = set(['background_reports', 'contact_details', 'email_address', 
+                          'media', 'personal_profiles', 'professional_and_business', 
+                          'public_records', 'publications', 'school_and_classmates', 'web_pages'])
+
+    def __init__(self, url=None, category=None, sponsored=None, 
+            domain=None, name=None, valid_since=None, inferred=None):
+        """
+        `url` is the URL address itself
+        `domain` is the URL's domain
+        `name` is the website name
+        `category` is one of URL.categories_set
+
+        `url`, `category`, `domain` and `name` should all be unicode 
+        objects or utf8 encoded strs (will be decoded automatically).
         
-        `type_` is one of RelatedURL.types_set.
-        
+        `sponsored` is a boolean - whether the URL is sponsored or not
         `valid_since` is a datetime.datetime object, it's the first time Pipl's
         crawlers found this data on the page.
         
         """
         Field.__init__(self, valid_since)
-        self.content = content
-        self.type = type_
+        self.url = url
+        self.domain = domain
+        self.sponsored = sponsored
+        self.name = name
+        self.category = category
     
     @property
     def is_valid_url(self):
         """A bool value that indicates whether the URL is a valid URL."""
-        return bool(self.content and is_valid_url(self.content))
+        return bool(self.url and is_valid_url(self.url))
         
-
-class Relationship(Field):
-    
-    """Name of another person related to this person."""
-    
-    attributes = ('type', 'subtype')
-    children = ('name',)
-    types_set = set(['friend', 'family', 'work', 'other'])
-    
-    def __init__(self, name=None, type_=None, subtype=None, 
-                 valid_since=None):
-        """`name` is a Name object (piplapis.data.fields.Name).
-        
-        `type_` and `subtype` should both be unicode objects or utf8 encoded 
-        strs (will be decoded automatically).
-        
-        `type_` is one of RelatedURL.types_set.
-        
-        `subtype` is not restricted to a specific list of possible values (for 
-        example, if type_ is "family" then subtype can be "Father", "Mother", 
-        "Son" and many other things).
-        
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
-        
-        """
-        Field.__init__(self, valid_since)
-        self.name = name
-        self.type = type_
-        self.subtype = subtype
-    
-    @classmethod
-    def from_dict(cls, d):
-        """Extend Field.from_dict and also load the name from the dict."""
-        relationship = super(cls, cls).from_dict(d)
-        if relationship.name is not None:
-            relationship.name = Name.from_dict(relationship.name)
-        return relationship
-
-
-class Tag(Field):
-    
-    """A general purpose element that holds any meaningful string that's 
-    related to the person.
-    Used for holding data about the person that either couldn't be clearly 
-    classified or was classified as something different than the available
-    data fields.
-    
-    """
-    
-    attributes = ('classification',)
-    
-    def __init__(self, content=None, classification=None, valid_since=None):
-        """`content` is the tag itself, both `content` and `classification` 
-        should be unicode objects or utf8 encoded strs (will be decoded 
-        automatically).
-        
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
-        
-        """
-        Field.__init__(self, valid_since)
-        self.content = content
-        self.classification = classification
-    
 
 class DateRange(Serializable):
     
