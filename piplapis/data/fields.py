@@ -145,10 +145,10 @@ class Gender(Field):
 class Ethnicity(Field):
     children = ('content', )
     
-    ethnicities = set(['white', 'black', 'american indian', 'alaska native', 
-                       'asian indian', 'chinese', 'filipino', 'other asian', 'japanese', 
-                       'korean', 'viatnamese', 'native hawaiian', 'guamanian', 
-                       'chamorro', 'samoan', 'other pacific islander', 'other'])
+    ethnicities = set(['white', 'black', 'american_indian', 'alaska_native', 
+                       'asian_indian', 'chinese', 'filipino', 'other_asian', 'japanese', 
+                       'korean', 'viatnamese', 'native_hawaiian', 'guamanian', 
+                       'chamorro', 'samoan', 'other_pacific_islander', 'other'])
 
     def __init__(self, content=None, valid_since=None, inferred=None):
         """
@@ -337,15 +337,16 @@ class Phone(Field):
     """A phone number of a person."""
     
     attributes = ('type',)
-    children = ('country_code', 'number', 'extension')
+    children = ('country_code', 'number', 'extension', 'raw')
     types_set = set(['mobile', 'home_phone', 'home_fax', 'work_phone', 
                      'work_fax', 'pager'])
     
-    def __init__(self, country_code=None, number=None, extension=None,
+    def __init__(self, country_code=None, number=None, raw=None, extension=None,
                  type_=None, valid_since=None, inferred=None):
         """`country_code`, `number` and `extension` should all be int/long.
         
         `type_` is one of Phone.types_set.
+        `raw` is a raw phone number string
         
         `valid_since` is a datetime.datetime object, it's the first time Pipl's
         crawlers found this data on the page.
@@ -354,6 +355,7 @@ class Phone(Field):
         Field.__init__(self, valid_since)
         self.country_code = country_code
         self.number = number
+        self.raw = raw
         self.extension = extension
         self.type = type_
         # The two following display attributes are available when working with 
@@ -369,22 +371,10 @@ class Phone(Field):
     def is_searchable(self):
         """A bool value that indicates whether the phone is a valid phone 
         to search by."""
-        return self.number is not None and \
-               (not self.country_code or self.country_code == 1)
-    
-    @staticmethod
-    def from_text(text):
-        """Strip `text` (unicode/str) from all non-digit chars and return a new
-        Phone object with the number from text.
-        
-        >>> phone = Phone.from_text('(888) 777-666')
-        >>> phone.number
-        888777666
-        
-        """
-        number = int(filter(unicode.isdigit, unicode(text)))
-        return Phone(number=number)
-        
+        return (self.number and self.country_code) or self.raw
+        #return self.number is not None and \
+               #(not self.country_code or self.country_code == 1)
+            
     @classmethod
     def from_dict(cls, d):
         """Extend Field.from_dict, set display/display_international 
@@ -626,6 +616,7 @@ class Language(Field):
         self.language = language
         self.region = region
 
+    @property
     def display(self):
         if self.language and self.region:
             return u"{}_{}".format(self.language, self.region)
@@ -810,7 +801,7 @@ class URL(Field):
                           'public_records', 'publications', 'school_and_classmates', 'web_pages'])
 
     def __init__(self, url=None, category=None, sponsored=None, 
-            domain=None, name=None, valid_since=None, inferred=None):
+            domain=None, name=None, source_id=None, valid_since=None, inferred=None):
         """
         `url` is the URL address itself
         `domain` is the URL's domain
@@ -831,6 +822,7 @@ class URL(Field):
         self.sponsored = sponsored
         self.name = name
         self.category = category
+        self.source_id = source_id
     
     @property
     def is_valid_url(self):

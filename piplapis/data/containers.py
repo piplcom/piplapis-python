@@ -80,7 +80,7 @@ class FieldsContainer(object):
                 d[container] = [field.to_dict() for field in fields]
         for attr_name in self.singular_fields.values():
             if getattr(self, attr_name):
-                d[attr_name] = getattr(self, attr_name)
+                d[attr_name] = getattr(self, attr_name).to_dict()
         return d
 
 
@@ -207,7 +207,7 @@ class Source(Serializable, FieldsContainer):
     }
 
     def __init__(self, fields=None, match=None, name=None, category=None, origin_url=None,
-                 sponsored=None, domain=None, person_id=None, premium=None, valid_since=None):
+                 sponsored=None, domain=None, source_id=None, person_id=None, premium=None, valid_since=None):
         """Extend FieldsContainer.__init__ and set the source's attributes.
 
         Args:
@@ -228,6 +228,7 @@ class Source(Serializable, FieldsContainer):
         sponsored -- A boolean, whether the source is a sponsored result or not
         domain -- A string, the domain of this source
         person_id -- A string, the person's unique ID
+        id -- A string, the source ID
         premium -- A boolean, whether this is a premium source
         valid_since -- A datetime.datetime object, this is the first time
                        Pipl's crawlers saw this source.
@@ -241,6 +242,7 @@ class Source(Serializable, FieldsContainer):
         self.origin_url = origin_url
         self.domain = domain
         self.sponsored = sponsored
+        self.source_id = source_id
         self.person_id = person_id
         self.premium = premium
 
@@ -256,12 +258,13 @@ class Source(Serializable, FieldsContainer):
         valid_since = d.get('@valid_since')
         person_id = d.get('@person_id')
         premium = d.get('@premium')
+        source_id = d.get('@id')
         if valid_since:
             valid_since = str_to_datetime(valid_since)
         fields = cls.fields_from_dict(d)
         return cls(fields=fields, match=match, name=name, category=category,
                    origin_url=origin_url, domain=domain, sponsored=sponsored,
-                   valid_since=valid_since, premium=premium, person_id=person_id)
+                   valid_since=valid_since, source_id=source_id, premium=premium, person_id=person_id)
 
     def to_dict(self):
         """Return a dict representation of the source."""
@@ -284,6 +287,8 @@ class Source(Serializable, FieldsContainer):
             d['@valid_since'] = datetime_to_str(self.valid_since)
         if self.premium:
             d['@premium'] = self.premium
+        if self.source_id:
+            d['@id'] = self.source_id
         d.update(self.fields_to_dict())
         return d
  
