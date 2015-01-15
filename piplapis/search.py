@@ -87,8 +87,8 @@ class SearchAPIRequest(object):
                  last_name=None, raw_name=None, email=None, phone=None, country_code=None,
                  raw_phone=None, username=None, country=None, state=None, city=None, 
                  raw_address=None, from_age=None, to_age=None, person=None,
-                 minimum_probability=None, show_souces=None,
-                 possible_results=None, live_feeds=None): 
+                 minimum_probability=None, show_sources=None,
+                 possible_results=None, hide_sponsored=None, live_feeds=None): 
         """Initiate a new request object with given query params.
         
         Each request must have at least one searchable parameter, meaning 
@@ -132,6 +132,7 @@ class SearchAPIRequest(object):
                             only a person match will be returned.
         live_feeds -- bool, default True. Whether to use live feeds. Only relevant in plans that include
                       live feeds. Can be set to False for performance.
+        hide_sponsored -- bool, default False. Whether to hide sponsored results.
         Each of the arguments that should have a unicode value accepts both
         unicode objects and utf8 encoded str (will be decoded automatically).
         """
@@ -177,11 +178,11 @@ class SearchAPIRequest(object):
         """
         if not (self.api_key or default_api_key):
             raise ValueError('API key is missing')
-        if strict and type(self.possible_results) not in (bool, None):
+        if strict and self.possible_results is not None and type(self.possible_results) is not bool:
             raise ValueError('possible_results should be a boolean')
-        if strict and type(self.hide_sponsored) not in (bool, None):
+        if strict and self.hide_sponsored is not None and type(self.hide_sponsored) is not bool:
             raise ValueError('hide_sponsored should be a boolean')
-        if strict and type(self.live_feeds) not in (bool, None):
+        if strict and self.live_feeds is not None and type(self.live_feeds) is not bool:
             raise ValueError('live_feeds should be a boolean')
         if strict and self.show_sources not in ("all", "matching", "false", False, None):
             raise ValueError('show_sources has a wrong value. Should be "matching", "all", or None')
@@ -287,11 +288,11 @@ class SearchAPIRequest(object):
 
 
 class SearchAPIResponse(Serializable):
-   
+
     """a response from Pipl's Search API.
-   
+
     a response comprises the three things returned as a result to your query:
-   
+
     - a person (piplapis.data.containers.Person) that is the data object
       representing all the information available for the person you were
       looking for.
@@ -434,6 +435,86 @@ class SearchAPIResponse(Serializable):
         if self.possible_persons:
             d['possible_persons'] = [person.to_dict() for person in self.possible_persons]
         return d
+
+    @property
+    def gender(self):
+        """
+        A shortcut method to get the result's person's gender.
+        return str
+        """
+        return self.person.gender.display if self.person else None
+
+    @property
+    def age(self):
+        """
+        A shortcut method to get the result's person's age.
+        return str
+        """
+        return self.person.dob.display if self.person and self.person.dob else None
+
+    @property
+    def job(self):
+        """
+        A shortcut method to get the result's person's job.
+        return str
+        """
+        return self.person.jobs[0].display if self.person and len(self.person.jobs) > 0 else None
+
+    @property
+    def address(self):
+        """
+        A shortcut method to get the result's person's address.
+        return str
+        """
+        return self.person.addresses[0].display if self.person and len(self.person.addresses) > 0 else None
+
+    @property
+    def education(self):
+        """
+        A shortcut method to get the result's person's education.
+        return str
+        """
+        return self.person.educations[0].display if self.person and len(self.person.educations) > 0 else None
+
+    @property
+    def language(self):
+        """
+        A shortcut method to get the result's person's spoken language.
+        return str
+        """
+        return self.person.languages[0].display if self.person and len(self.person.languages) > 0 else None
+
+    @property
+    def ethnicity(self):
+        """
+        A shortcut method to get the result's person's ethnicity.
+        return str
+        """
+        return self.person.ethnicities[0].display if self.person and len(self.person.ethnicities) > 0 else None
+
+    @property
+    def origin_country(self):
+        """
+        A shortcut method to get the result's person's origin country.
+        return str
+        """
+        return self.person.origin_countries[0].display if self.person and len(self.person.origin_countries) > 0 else None
+
+    @property
+    def phone(self):
+        """
+        A shortcut method to get the result's person's phone.
+        return str
+        """
+        return self.person.phones[0].display if self.person and len(self.person.phones) > 0 else None
+
+    @property
+    def email(self):
+        """
+        A shortcut method to get the result's person's email.
+        return str
+        """
+        return self.person.emails[0].address if self.person and len(self.person.emails) > 0 else None
 
 
 class SearchAPIError(APIError):
