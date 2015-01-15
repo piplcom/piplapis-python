@@ -165,8 +165,8 @@ class Ethnicity(Field):
     @property
     def display(self):
         if self.content:
-            return self.content.title()
-        
+            return self.content.replace("_", " ").title()
+
 class Name(Field):
     
     """A name of a person."""
@@ -597,6 +597,12 @@ class OriginCountry(Field):
         """
         Field.__init__(self, valid_since)
         self.country = country
+
+    @property
+    def display(self):
+        if self.country:
+            return COUNTRIES.get(self.country.upper())
+
     
 class Language(Field):
     
