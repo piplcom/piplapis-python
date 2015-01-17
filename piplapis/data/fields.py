@@ -442,9 +442,9 @@ class Email(Field):
     
     @property
     def is_searchable(self):
-        """A bool value that indicates whether the email is a valid email 
-        to search by."""
-        return self.is_valid_email
+        """A bool value that indicates whether the it's possible to search using the
+        data in this email field (email address or md5)."""
+        return self.is_valid_email or (self.address_md5 and len(self.address_md5) == 32)
     
     @property
     def username(self):
