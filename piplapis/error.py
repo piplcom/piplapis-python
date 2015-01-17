@@ -5,12 +5,13 @@ class APIError(Exception, Serializable):
     
     """An exception raised when the response from the API contains an error."""
     
-    def __init__(self, error, http_status_code):
+    def __init__(self, error, http_status_code, warnings=None):
         """Extend Exception.__init___ and set two extra attributes - 
         error (unicode) and http_status_code (int)."""
         Exception.__init__(self, error)
         self.error = error
         self.http_status_code = http_status_code
+        self.warnings = warnings
     
     @property
     def is_user_error(self):
@@ -25,7 +26,7 @@ class APIError(Exception, Serializable):
     @classmethod
     def from_dict(cls, d):
         """Transform the dict to a error object and return the error."""
-        return cls(d.get('error'), d.get('@http_status_code'))
+        return cls(d.get('error'), d.get('@http_status_code'), d.get('warnings'))
     
     def to_dict(self):
         """Return a dict representation of the error."""
