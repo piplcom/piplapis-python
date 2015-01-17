@@ -560,23 +560,34 @@ class Image(Field):
     
     """A URL of an image of a person."""
     
-    children = ('url',)
+    children = ('url', 'thumbnail_token')
     
-    def __init__(self, url=None, valid_since=None, inferred=None):
+    def __init__(self, url=None, thumbnail_token=None, valid_since=None, inferred=None):
         """`url` should be a unicode object or utf8 encoded str (will be decoded 
         automatically).
         
+        `thumbnail_token` is used to create the URL for Pipl's thumbnail service.
+
         `valid_since` is a datetime.datetime object, it's the first time Pipl's
         crawlers found this data on the page.
         
         """
         Field.__init__(self, valid_since)
         self.url = url
+        self.thumbnail_token = thumbnail_token
     
     @property
     def is_valid_url(self):
         """A bool value that indicates whether the image URL is a valid URL."""
         return bool(self.url and is_valid_url(self.url))
+
+    def get_thumbnail_url(self, width=100, height=100, detect_face=True, favicon=True):
+        if self.thumbnail_token:
+            detect_face = 1 if detect_face else 0
+            favicon = 1 if favicon else 0
+            return 'https://thumb.pipl.com/cgi-bin/fdt.fcgi?hg={}&wd={}&favicon={}&th={}&eurl={}'.format(
+                    width, height, favicon, detect_face, self.thumbnail_token)
+
     
 
 class OriginCountry(Field):

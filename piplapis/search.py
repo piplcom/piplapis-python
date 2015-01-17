@@ -442,7 +442,7 @@ class SearchAPIResponse(Serializable):
         A shortcut method to get the result's person's gender.
         return str
         """
-        return self.person.gender.display if self.person else None
+        return self.person.gender.display if self.person and self.person.gender else None
 
     @property
     def age(self):
