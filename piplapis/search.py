@@ -86,8 +86,8 @@ class SearchAPIRequest(object):
     def __init__(self, api_key=None, first_name=None, middle_name=None, 
                  last_name=None, raw_name=None, email=None, phone=None, country_code=None,
                  raw_phone=None, username=None, country=None, state=None, city=None, 
-                 raw_address=None, from_age=None, to_age=None, person=None,
-                 minimum_probability=None, show_sources=None,
+                 raw_address=None, from_age=None, to_age=None, person=None, 
+                 search_pointer=None, minimum_probability=None, show_sources=None,
                  possible_results=None, hide_sponsored=None, live_feeds=None): 
         """Initiate a new request object with given query params.
         
@@ -125,6 +125,8 @@ class SearchAPIRequest(object):
                   The person can contain every field allowed by the data-model
                   (see piplapis.data.fields) and can hold multiple fields of
                   the same type (for example: two emails, three addresses etc.)
+        search_pointer -- str, sending a search pointer of a possible person will retrieve 
+                          more data related to this person.
         minimum_probability -- float (0-1). The minimum required confidence for inferred data.
         show_sources -- str, one of "matching"/"all". "all" will show all sources, "matching"
                         only those of the matching person. If not set, no sources will be shown.
@@ -158,6 +160,7 @@ class SearchAPIRequest(object):
             dob = DOB.from_age_range(from_age or 0, to_age or 1000)
             person.add_fields([dob])
 
+        person.search_pointer = search_pointer
         self.api_key = api_key
         self.person = person
         self.show_sources = show_sources
@@ -190,7 +193,7 @@ class SearchAPIRequest(object):
                                                     self.minimum_probability > 1 or self.minimum_probability < 0):
             raise ValueError('minimum_probability should be a float between 0 and 1')
         if not self.person.is_searchable:
-            raise ValueError('No valid name/username/phone/email in request')
+            raise ValueError('No valid name/username/phone/email or search pointer in request')
         if strict and self.person.unsearchable_fields:
             raise ValueError('Some fields are unsearchable: %s' 
                              % self.person.unsearchable_fields)
@@ -202,7 +205,11 @@ class SearchAPIRequest(object):
         return SearchAPIRequest.BASE_URL + urllib.urlencode(query, doseq=True)
 
     def get_search_query(self):
-        query = {"person": self.person.to_json(), "key": self.api_key or default_api_key}
+        query = {"key": self.api_key or default_api_key}
+        if self.person and not self.person.search_pointer:
+            query['person'] = self.person.to_json()
+        elif self.person.search_pointer:
+            query['search_pointer'] = self.person.search_pointer
         if self.minimum_probability is not None:
             query['minimum_probability'] = self.minimum_probability
         if self.possible_results is not None:

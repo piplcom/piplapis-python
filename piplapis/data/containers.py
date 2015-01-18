@@ -374,7 +374,8 @@ class Person(Serializable, FieldsContainer):
         """A bool value that indicates whether the person has enough data and
         can be sent as a query to the API."""
         filter_func = lambda field: field.is_searchable
-        return bool(filter(filter_func, self.names) or 
+        return bool(self.search_pointer or
+                    filter(filter_func, self.names) or 
                     filter(filter_func, self.emails) or
                     filter(filter_func, self.phones) or
                     filter(filter_func, self.usernames))
