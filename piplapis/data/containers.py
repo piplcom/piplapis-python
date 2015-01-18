@@ -228,7 +228,7 @@ class Source(Serializable, FieldsContainer):
         sponsored -- A boolean, whether the source is a sponsored result or not
         domain -- A string, the domain of this source
         person_id -- A string, the person's unique ID
-        id -- A string, the source ID
+        source_id -- A string, the source ID
         premium -- A boolean, whether this is a premium source
         valid_since -- A datetime.datetime object, this is the first time
                        Pipl's crawlers saw this source.
@@ -291,7 +291,7 @@ class Source(Serializable, FieldsContainer):
             d['@id'] = self.source_id
         d.update(self.fields_to_dict())
         return d
- 
+
     @property
     def is_valid_url(self):
         """A bool that indicates whether the URL is valid."""
