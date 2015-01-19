@@ -24,13 +24,6 @@ from piplapis.data import *
 from piplapis.data.utils import Serializable
 
 
-# Default API key value, you can set your key globally in this variable instead 
-# of passing it to each request object.
-# >>> import piplapis.search
-# >>> piplapis.search.default_api_key = '<your_key>'
-default_api_key = None
-
-
 class SearchAPIRequest(object):
     
     """A request to Pipl's Search API.
@@ -79,16 +72,35 @@ class SearchAPIRequest(object):
     """
     
     HEADERS = {'User-Agent': 'piplapis/python/%s' % piplapis.__version__}
-    BASE_URL = 'http://api.pipl.com/search/v4/?'
+    BASE_URL = 'http://localhost:8000/apis/search/v4/?'
     # HTTPS is also supported:
     #BASE_URL = 'https://api.pipl.com/search/v3/json/?'
-    
-    def __init__(self, api_key=None, first_name=None, middle_name=None, 
+
+    # The following are default settings for all request objects
+    # You can set them once instead of passing them to the constructor every time
+    default_api_key = 'samplekey'
+    default_minimum_probability = None
+    default_show_sources = None
+    default_possible_results = None
+    default_hide_sponsored = None
+    default_live_feeds = None
+
+    @classmethod
+    def set_default_settings(cls, api_key=None, minimum_probability=None, show_sources=None,
+                             possible_results=None, hide_sponsored=None, live_feeds=None):
+        cls.default_api_key = api_key
+        cls.default_minimum_probability = minimum_probability
+        cls.default_show_sources = show_sources
+        cls.default_possible_results = possible_results
+        cls.default_hide_sponsored = hide_sponsored
+        cls.default_live_feeds = live_feeds
+
+    def __init__(self, api_key=None, first_name=None, middle_name=None,
                  last_name=None, raw_name=None, email=None, phone=None, country_code=None,
-                 raw_phone=None, username=None, country=None, state=None, city=None, 
-                 raw_address=None, from_age=None, to_age=None, person=None, 
+                 raw_phone=None, username=None, country=None, state=None, city=None,
+                 raw_address=None, from_age=None, to_age=None, person=None,
                  search_pointer=None, minimum_probability=None, show_sources=None,
-                 possible_results=None, hide_sponsored=None, live_feeds=None): 
+                 possible_results=None, hide_sponsored=None, live_feeds=None):
         """Initiate a new request object with given query params.
         
         Each request must have at least one searchable parameter, meaning 
@@ -161,13 +173,14 @@ class SearchAPIRequest(object):
             person.add_fields([dob])
 
         person.search_pointer = search_pointer
-        self.api_key = api_key
         self.person = person
-        self.show_sources = show_sources
-        self.live_feeds = live_feeds
-        self.possible_results = possible_results
-        self.minimum_probability = minimum_probability
-        self.hide_sponsored = hide_sponsored
+
+        self.api_key = api_key or self.default_api_key
+        self.show_sources = show_sources or self.default_show_sources
+        self.live_feeds = live_feeds or self.default_live_feeds
+        self.possible_results = possible_results or self.default_possible_results
+        self.minimum_probability = minimum_probability or self.default_minimum_probability
+        self.hide_sponsored = hide_sponsored or self.default_hide_sponsored
 
     def validate_query_params(self, strict=True):
         """Check if the request is valid and can be sent, raise ValueError if 
@@ -179,7 +192,7 @@ class SearchAPIRequest(object):
         because required query params are missing.
         
         """
-        if not (self.api_key or default_api_key):
+        if not self.api_key:
             raise ValueError('API key is missing')
         if strict and self.possible_results is not None and type(self.possible_results) is not bool:
             raise ValueError('possible_results should be a boolean')
@@ -205,7 +218,7 @@ class SearchAPIRequest(object):
         return SearchAPIRequest.BASE_URL + urllib.urlencode(query, doseq=True)
 
     def get_search_query(self):
-        query = {"key": self.api_key or default_api_key}
+        query = {"key": self.api_key}
         if self.person and not self.person.search_pointer:
             query['person'] = self.person.to_json()
         elif self.person.search_pointer:
@@ -422,7 +435,7 @@ class SearchAPIResponse(Serializable):
             person = Person.from_dict(person)
         sources = d.get('sources')
         if sources:
-            sources = [Source.from_dict(source) for source in source]
+            sources = [Source.from_dict(source) for source in sources]
         possible_persons = [Person.from_dict(x) for x in d.get('possible_persons', [])]
         return SearchAPIResponse(query=query, person=person, sources=sources,
                                  possible_persons=possible_persons,
