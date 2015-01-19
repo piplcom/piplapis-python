@@ -361,9 +361,7 @@ class Phone(Field):
         # The two following display attributes are available when working with 
         # a response from the API, both hold unicode values that can be used to 
         # display the phone in your application.
-        # Note that in other fields the display attribute is a property, this 
-        # is not the case here since generating the display for a phone is 
-        # country specific and requires a special library.
+        # Note that theses display values are calculated on the server.
         self.display = u''
         self.display_international = u''
         
