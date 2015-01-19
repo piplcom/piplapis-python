@@ -74,7 +74,7 @@ class SearchAPIRequest(object):
     HEADERS = {'User-Agent': 'piplapis/python/%s' % piplapis.__version__}
     BASE_URL = 'http://api.pipl.com/search/v4/?'
     # HTTPS is also supported:
-    #BASE_URL = 'https://api.pipl.com/search/v3/json/?'
+    #BASE_URL = 'https://api.pipl.com/search/v4/?'
 
     # The following are default settings for all request objects
     # You can set them once instead of passing them to the constructor every time
