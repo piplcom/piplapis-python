@@ -72,7 +72,7 @@ class SearchAPIRequest(object):
     """
     
     HEADERS = {'User-Agent': 'piplapis/python/%s' % piplapis.__version__}
-    BASE_URL = 'http://localhost:8000/apis/search/v4/?'
+    BASE_URL = 'http://api.pipl.com/search/v4/?'
     # HTTPS is also supported:
     #BASE_URL = 'https://api.pipl.com/search/v3/json/?'
 
