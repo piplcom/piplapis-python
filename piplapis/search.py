@@ -219,10 +219,10 @@ class SearchAPIRequest(object):
 
     def get_search_query(self):
         query = {"key": self.api_key}
-        if self.person and not self.person.search_pointer:
-            query['person'] = self.person.to_json()
-        elif self.person.search_pointer:
+        if self.person and self.person.search_pointer:
             query['search_pointer'] = self.person.search_pointer
+        elif self.person:
+            query['person'] = self.person.to_json()
         if self.minimum_probability is not None:
             query['minimum_probability'] = self.minimum_probability
         if self.possible_results is not None:
