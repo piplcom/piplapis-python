@@ -809,7 +809,7 @@ class URL(Field):
     about the person, or a URL otherwise related to the person.
     """
 
-    attributes = ('category', 'sponsored', 'domain', 'name')
+    attributes = ('category', 'sponsored', 'domain', 'name', 'source_id')
     children = ('url', )
     categories_set = set(['background_reports', 'contact_details', 'email_address', 
                           'media', 'personal_profiles', 'professional_and_business', 
