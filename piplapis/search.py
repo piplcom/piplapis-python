@@ -347,7 +347,8 @@ class SearchAPIResponse(Serializable):
     """
     
     def __init__(self, query=None, person=None, sources=None, 
-                 possible_persons=None, warnings_=None):
+                 possible_persons=None, warnings_=None, http_status_code=None,
+                 visible_sources=None, available_sources=None):
         """Args:
         
         query -- A Person object with the query as interpreted by Pipl.
@@ -366,6 +367,9 @@ class SearchAPIResponse(Serializable):
         self.sources = sources or []
         self.possible_persons = possible_persons or []
         self.warnings = warnings_ or []
+        self.http_status_code = http_status_code
+        self.visible_sources = visible_sources
+        self.available_sources = available_sources
         
     @property
     def matching_sources(self):
@@ -373,7 +377,7 @@ class SearchAPIResponse(Serializable):
         Note that the meaning of "match the person from the query" means "Pipl 
         is convinced that these sources hold data about the person you're 
         looking for". 
-        Essentialy, these are the sources that make up the Person object.
+        Essentially, these are the sources that make up the Person object.
         """
         return [source for source in self.sources if source.match == 1.]
         
@@ -426,6 +430,9 @@ class SearchAPIResponse(Serializable):
     @staticmethod
     def from_dict(d):
         """Transform the dict to a response object and return the response."""
+        http_status_code = d.get('@http_status_code')
+        visible_sources = d.get('@visible_sources')
+        available_sources = d.get('@available_sources')
         warnings_ = d.get('warnings', [])
         query = d.get('query') or None
         if query:
@@ -439,11 +446,18 @@ class SearchAPIResponse(Serializable):
         possible_persons = [Person.from_dict(x) for x in d.get('possible_persons', [])]
         return SearchAPIResponse(query=query, person=person, sources=sources,
                                  possible_persons=possible_persons,
-                                 warnings_=warnings_)
+                                 warnings_=warnings_, http_status_code=http_status_code,
+                                 visible_sources=visible_sources, available_sources=available_sources)
 
     def to_dict(self):
         """Return a dict representation of the response."""
         d = {}
+        if self.http_status_code:
+            d['@http_status_code'] = self.http_status_code
+        if self.visible_sources:
+            d['@visible_sources'] = self.visible_sources
+        if self.available_sources:
+            d['@available_sources'] = self.available_sources
         if self.warnings:
             d['warnings'] = self.warnings
         if self.query is not None:
@@ -460,82 +474,97 @@ class SearchAPIResponse(Serializable):
     def gender(self):
         """
         A shortcut method to get the result's person's gender.
-        return str
+        return Gender
         """
-        return self.person.gender.display if self.person and self.person.gender else None
+        return self.person.gender if self.person else None
 
     @property
-    def age(self):
+    def dob(self):
         """
         A shortcut method to get the result's person's age.
-        return str
+        return DOB
         """
-        return self.person.dob.display if self.person and self.person.dob else None
+        return self.person.dob if self.person else None
 
     @property
     def job(self):
         """
         A shortcut method to get the result's person's job.
-        return str
+        return Job
         """
-        return self.person.jobs[0].display if self.person and len(self.person.jobs) > 0 else None
+        return self.person.jobs[0] if self.person and len(self.person.jobs) > 0 else None
 
     @property
     def address(self):
         """
         A shortcut method to get the result's person's address.
-        return str
+        return Address
         """
-        return self.person.addresses[0].display if self.person and len(self.person.addresses) > 0 else None
+        return self.person.addresses[0] if self.person and len(self.person.addresses) > 0 else None
 
     @property
     def education(self):
         """
         A shortcut method to get the result's person's education.
-        return str
+        return Education
         """
-        return self.person.educations[0].display if self.person and len(self.person.educations) > 0 else None
+        return self.person.educations[0] if self.person and len(self.person.educations) > 0 else None
 
     @property
     def language(self):
         """
         A shortcut method to get the result's person's spoken language.
-        return str
+        return Language
         """
-        return self.person.languages[0].display if self.person and len(self.person.languages) > 0 else None
+        return self.person.languages[0] if self.person and len(self.person.languages) > 0 else None
 
     @property
     def ethnicity(self):
         """
         A shortcut method to get the result's person's ethnicity.
-        return str
+        return Ethnicity
         """
-        return self.person.ethnicities[0].display if self.person and len(self.person.ethnicities) > 0 else None
+        return self.person.ethnicities[0] if self.person and len(self.person.ethnicities) > 0 else None
 
     @property
     def origin_country(self):
         """
         A shortcut method to get the result's person's origin country.
-        return str
+        return OriginCountry
         """
-        return self.person.origin_countries[0].display if self.person and len(self.person.origin_countries) > 0 else None
+        return self.person.origin_countries[0] if self.person and len(self.person.origin_countries) > 0 else None
 
     @property
     def phone(self):
         """
         A shortcut method to get the result's person's phone.
-        return str
+        return Phone
         """
-        return self.person.phones[0].display if self.person and len(self.person.phones) > 0 else None
+        return self.person.phones[0] if self.person and len(self.person.phones) > 0 else None
 
     @property
     def email(self):
         """
         A shortcut method to get the result's person's email.
-        return str
+        return Email
         """
-        return self.person.emails[0].address if self.person and len(self.person.emails) > 0 else None
+        return self.person.emails[0] if self.person and len(self.person.emails) > 0 else None
 
+    @property
+    def name(self):
+        """
+        A shortcut method to get the result's person's name.
+        return Name
+        """
+        return self.person.names[0] if self.person and len(self.person.names) > 0 else None
+
+    @property
+    def image(self):
+        """
+        A shortcut method to get the result's person's image.
+        return Image
+        """
+        return self.person.images[0] if self.person and len(self.person.images) > 0 else None
 
 class SearchAPIError(APIError):
     """an exception raised when the response from the search API contains an
