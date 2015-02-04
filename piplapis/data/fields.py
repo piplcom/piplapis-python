@@ -31,9 +31,9 @@ class Field(Serializable):
         
         Example:
         >>> from piplapis.data import Name
-        >>> name = Name(first='eric')
+        >>> name = Name(first='clark')
         >>> name.first
-        u'eric'
+        u'clark'
         
         """
         if isinstance(value, str):
@@ -47,15 +47,13 @@ class Field(Serializable):
     
     def __unicode__(self):
         """Return the unicode representation of the object."""
-        children = list(self.children)
-        if 'raw' in children:
-            children.remove('raw')
-        values = [getattr(self, child) for child in children]
-        return u' '.join([unicode(val) for val in values if val is not None])
+        if hasattr(self, 'display'):
+            return unicode(self.display)
     
     def __str__(self):
         """Return the str representation of the object (encoded with utf8)."""
-        return unicode(self).encode('utf8')
+        if hasattr(self, 'display'):
+            return self.display.encode('utf8')
     
     def __repr__(self):
         """Return a representation of the object (a valid value for eval())."""
@@ -283,10 +281,7 @@ class Address(Field):
     def is_searchable(self):
         """A bool value that indicates whether the address is a valid address
         to search by."""
-        return (self.is_valid_country and self.zip_code) or \
-               (self.raw) or \
-               (self.is_valid_country and self.is_valid_state) or \
-               (self.is_valid_country and not self.state)
+        return self.raw or (self.is_valid_country and (self.zip_code or self.is_valid_state or not self.state))
 
     @property
     def is_valid_country(self):
