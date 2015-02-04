@@ -113,7 +113,7 @@ class Relationship(Serializable, FieldsContainer):
     types_set = set(['friend', 'family', 'work', 'other'])
     
     def __init__(self, fields=None, type_=None, subtype=None, 
-                 valid_since=None):
+                 valid_since=None, inferred=None):
         """`fields` is a list of fields (plapis.data.fields.Field subclasses)
         
         `type_` and `subtype` should both be unicode objects or utf8 encoded 
@@ -133,6 +133,7 @@ class Relationship(Serializable, FieldsContainer):
         self.type = type_
         self.subtype = subtype
         self.valid_since = valid_since
+        self.inferred = inferred
     
     @classmethod
     def from_dict(cls, d):
@@ -143,6 +144,10 @@ class Relationship(Serializable, FieldsContainer):
             ins.type = d['@type']
         if "@subtype" in d:
             ins.suptype = d['@subtype']
+        if "@valid_since" in d and d['@valid_since']:
+            ins.valid_since = str_to_datetime(d['@valid_since'])
+        if "@inferred" in d:
+            ins.inferred = d['@inferred']
         return ins
 
     def to_dict(self):
@@ -152,6 +157,10 @@ class Relationship(Serializable, FieldsContainer):
             d['@type'] = self.type
         if self.subtype:
             d['@subtype'] = self.subtype
+        if self.inferred:
+            d['@inferred'] = self.inferred
+        if self.valid_since is not None:
+            d['@valid_since'] = datetime_to_str(self.valid_since)
         d.update(self.fields_to_dict())
         return d
  
@@ -291,19 +300,6 @@ class Source(Serializable, FieldsContainer):
             d['@id'] = self.source_id
         d.update(self.fields_to_dict())
         return d
-
-    @property
-    def is_valid_url(self):
-        """A bool that indicates whether the URL is valid."""
-        return bool(self.origin_url and is_valid_url(self.origin_url))
-    
-    @classmethod
-    def validate_categories(cls, categories):
-        """Take an iterable of source categories and raise ValueError if some 
-        of them are invalid."""
-        if not set(categories) <= cls.categories:
-            invalid = list(set(categories) - cls.categories)
-            raise ValueError('Invalid categories: %s' % invalid)
    
 
 class Person(Serializable, FieldsContainer):
