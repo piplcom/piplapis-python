@@ -143,7 +143,7 @@ class Relationship(Serializable, FieldsContainer):
         if "@type" in d:
             ins.type = d['@type']
         if "@subtype" in d:
-            ins.suptype = d['@subtype']
+            ins.subtype = d['@subtype']
         if "@valid_since" in d and d['@valid_since']:
             ins.valid_since = str_to_datetime(d['@valid_since'])
         if "@inferred" in d:
