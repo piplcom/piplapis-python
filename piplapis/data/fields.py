@@ -117,7 +117,6 @@ class Field(Serializable):
         return d
         
     
-
 class Gender(Field):
     children = ('content', )
     
@@ -130,40 +129,52 @@ class Gender(Field):
         `valid_since` is a datetime.datetime object, it's the first time Pipl's
         crawlers found this data on the page.
         """
-        super(Gender, self).__init__(valid_since)
-        if content.lower() not in self.genders:
-            raise ValueError("Gender unknown")
-        self.content = content.lower()
+        super(Gender, self).__init__(valid_since, inferred)
+        self._content = None
+        self.content = content
 
     @property
     def display(self):
         if self.content:
             return self.content.title()
 
+    @property
+    def content(self):
+        return self._content
+
+    @content.setter
+    def content(self, value):
+        if value.lower() not in self.genders:
+            raise ValueError("Gender unknown")
+        self._content = value
+
+
 class Ethnicity(Field):
+    """
+    An ethnicity value.
+    The content will be a string with one of the following values (based on US census definitions):
+
+    """
     children = ('content', )
-    
-    ethnicities = set(['white', 'black', 'american_indian', 'alaska_native', 
-                       'asian_indian', 'chinese', 'filipino', 'other_asian', 'japanese', 
-                       'korean', 'viatnamese', 'native_hawaiian', 'guamanian', 
-                       'chamorro', 'samoan', 'other_pacific_islander', 'other'])
 
     def __init__(self, content=None, valid_since=None, inferred=None):
         """
-        `content` is the ethnicity value. One of Ethnicity.ethnicities.
+        `content` is the ethnicity value. One of: 'white', 'black', 'american_indian', 'alaska_nativeian_indian',
+            'chinese', 'filipino', 'other_asian', 'japanese',
+            'korean', 'viatnamese', 'native_hawaiian', 'guamanian',
+            'chamorro', 'samoan', 'other_pacific_islander', 'other'.
 
         `valid_since` is a datetime.datetime object, it's the first time Pipl's
         crawlers found this data on the page.
         """
-        super(Ethnicity, self).__init__(valid_since)
-        if content.lower() not in self.ethnicities:
-            raise ValueError("Ethnicity unknown")
+        super(Ethnicity, self).__init__(valid_since, inferred)
         self.content = content.lower()
 
     @property
     def display(self):
         if self.content:
             return self.content.replace("_", " ").title()
+
 
 class Name(Field):
     
@@ -191,7 +202,7 @@ class Name(Field):
         crawlers found this data on the page.
         
         """
-        Field.__init__(self, valid_since)
+        Field.__init__(self, valid_since, inferred)
         self.prefix = prefix
         self.first = first
         self.middle = middle
@@ -249,7 +260,7 @@ class Address(Field):
         crawlers found this data on the page.
         
         """
-        Field.__init__(self, valid_since)
+        Field.__init__(self, valid_since, inferred)
         self.country = country
         self.state = state
         self.city = city
@@ -285,7 +296,7 @@ class Address(Field):
 
     @property
     def is_valid_country(self):
-        """A bool value that indicates whether the object's country is a valid 
+        """A bool value that indicates whether the object's country is a valid
         country code."""
         return self.country is not None and self.country.upper() in COUNTRIES
     
@@ -347,7 +358,7 @@ class Phone(Field):
         crawlers found this data on the page.
         
         """
-        Field.__init__(self, valid_since)
+        Field.__init__(self, valid_since, inferred)
         self.country_code = country_code
         self.number = number
         self.raw = raw
@@ -415,7 +426,7 @@ class Email(Field):
         crawlers found this data on the page.
         
         """
-        Field.__init__(self, valid_since)
+        Field.__init__(self, valid_since, inferred)
         self.address = address
         self.address_md5 = address_md5
         self.type = type_
@@ -486,7 +497,7 @@ class Job(Field):
         crawlers found this data on the page.
         
         """
-        Field.__init__(self, valid_since)
+        Field.__init__(self, valid_since, inferred)
         self.title = title
         self.organization = organization
         self.industry = industry
@@ -531,7 +542,7 @@ class Education(Field):
         crawlers found this data on the page.
         
         """
-        Field.__init__(self, valid_since)
+        Field.__init__(self, valid_since, inferred)
         self.degree = degree
         self.school = school
         self.date_range = date_range
@@ -565,7 +576,7 @@ class Image(Field):
         crawlers found this data on the page.
         
         """
-        Field.__init__(self, valid_since)
+        Field.__init__(self, valid_since, inferred)
         self.url = url
         self.thumbnail_token = thumbnail_token
     
@@ -581,7 +592,6 @@ class Image(Field):
             return 'https://thumb.pipl.com/cgi-bin/fdt.fcgi?hg={}&wd={}&favicon={}&th={}&eurl={}'.format(
                     width, height, favicon, detect_face, self.thumbnail_token)
 
-    
 
 class OriginCountry(Field):
     
@@ -599,7 +609,7 @@ class OriginCountry(Field):
         crawlers found this data on the page.
         
         """
-        Field.__init__(self, valid_since)
+        Field.__init__(self, valid_since, inferred)
         self.country = country
 
     @property
@@ -607,7 +617,7 @@ class OriginCountry(Field):
         if self.country:
             return COUNTRIES.get(self.country.upper())
 
-    
+
 class Language(Field):
     
     """A language the person is familiar with."""
@@ -622,7 +632,7 @@ class Language(Field):
         crawlers found this data on the page.
         
         """
-        Field.__init__(self, valid_since)
+        Field.__init__(self, valid_since, inferred)
         self.language = language
         self.region = region
 
@@ -632,6 +642,7 @@ class Language(Field):
             return u"{}_{}".format(self.language, self.region)
         return self.language or self.region
  
+
 class Username(Field):
     
     """A username/screen-name associated with the person.
@@ -650,7 +661,7 @@ class Username(Field):
         crawlers found this data on the page.
         
         """
-        Field.__init__(self, valid_since)
+        Field.__init__(self, valid_since, inferred)
         self.content = content
     
     @property
@@ -677,7 +688,7 @@ class UserID(Field):
         crawlers found this data on the page.
         
         """
-        Field.__init__(self, valid_since)
+        Field.__init__(self, valid_since, inferred)
         self.content = content
       
 
@@ -699,7 +710,7 @@ class DOB(Field):
         crawlers found this data on the page.
         
         """
-        Field.__init__(self, valid_since)
+        Field.__init__(self, valid_since, inferred)
         self.date_range = date_range
     
     @property
@@ -826,7 +837,7 @@ class URL(Field):
         crawlers found this data on the page.
         
         """
-        Field.__init__(self, valid_since)
+        Field.__init__(self, valid_since, inferred)
         self.url = url
         self.domain = domain
         self.sponsored = sponsored
