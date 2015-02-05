@@ -207,7 +207,8 @@ class Source(Serializable, FieldsContainer):
         Relationship: 'relationships',
         Ethnicity: 'ethnicities',
         OriginCountry: 'origin_countries',
-        Language: 'languages'
+        Language: 'languages',
+        Tag: 'tags'
     }
 
     singular_fields = {

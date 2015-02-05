@@ -5,7 +5,7 @@ from piplapis.data.utils import *
 
 
 __all__ = ['Name', 'Address', 'Phone', 'Email', 'Job', 'Education', 'Image', 
-           'Username', 'UserID', 'DOB', 'URL',
+           'Username', 'UserID', 'DOB', 'URL', 'Tag',
            'DateRange', 'Ethnicity', 'Language', 'OriginCountry', 'Gender']
 
 
@@ -849,7 +849,33 @@ class URL(Field):
     def is_valid_url(self):
         """A bool value that indicates whether the URL is a valid URL."""
         return bool(self.url and is_valid_url(self.url))
-        
+
+
+class Tag(Field):
+
+    """A general purpose element that holds any meaningful string that's
+    related to the person.
+    Used for holding data about the person that either couldn't be clearly
+    classified or was classified as something different than the available
+    data fields.
+
+    """
+
+    attributes = ('classification',)
+
+    def __init__(self, content=None, classification=None, valid_since=None, inferred=None):
+        """`content` is the tag itself, both `content` and `classification`
+        should be unicode objects or utf8 encoded strs (will be decoded
+        automatically).
+
+        `valid_since` is a datetime.datetime object, it's the first time Pipl's
+        crawlers found this data on the page.
+
+        """
+        Field.__init__(self, valid_since, inferred)
+        self.content = content
+        self.classification = classification
+
 
 class DateRange(Serializable):
     
