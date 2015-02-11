@@ -55,7 +55,7 @@ class FieldsContainer(object):
         """A list with all the fields contained in this object."""
         multiple = [field for container in self.class_container.values()
                     for field in getattr(self, container)]
-        single = [getattr(self, field_name) for field_name in self.singular_fields.keys() 
+        single = [getattr(self, field_name) for field_name in self.singular_fields.values()
                   if getattr(self, field_name)]
         return multiple + single
 
