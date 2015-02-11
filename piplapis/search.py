@@ -78,7 +78,7 @@ class SearchAPIRequest(object):
 
     # The following are default settings for all request objects
     # You can set them once instead of passing them to the constructor every time
-    default_api_key = 'samplekey'
+    default_api_key = 'sample_key'
     default_minimum_probability = None
     default_show_sources = None
     default_possible_results = None
