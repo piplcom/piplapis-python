@@ -47,19 +47,22 @@ class Field(Serializable):
     
     def __unicode__(self):
         """Return the unicode representation of the object."""
-        if hasattr(self, 'display'):
-            return unicode(self.display)
+        return unicode(str(self))
     
     def __str__(self):
         """Return the str representation of the object (encoded with utf8)."""
-        if hasattr(self, 'display'):
+        if hasattr(self, 'display') and getattr(self, 'display'):
             return self.display.encode('utf8')
-    
+        elif hasattr(self, '_display') and getattr(self, '_display'):
+            return self._display.encode('utf8')
+        else:
+            return ""
+
     def __repr__(self):
         """Return a representation of the object (a valid value for eval())."""
         attrs = list(self.attributes + self.children)
         attrs.append('valid_since')
-        attrs_values = [(attr, getattr(self, attr)) for attr in attrs]
+        attrs_values = [(attr, getattr(self, attr)) for attr in attrs if not attr.startswith("display")]
         attrs_values = [(attr, value) if attr != 'type' else ('type_', value)
                         for attr, value in attrs_values]
         args = ['%s=%s' % (attr, repr(value)) 
@@ -87,8 +90,6 @@ class Field(Serializable):
         """Transform the dict to a field object and return the field."""
         kwargs = {}
         for key, val in d.iteritems():
-            if key.startswith('display'): # includes phone.display_international
-                continue
             if key.startswith('@'):
                 key = key[1:]
             if key == 'type':
@@ -98,6 +99,12 @@ class Field(Serializable):
             elif key == 'date_range':
                 val = DateRange.from_dict(val)
             kwargs[key.encode('ascii')] = val
+        if 'display' in kwargs:
+            try:
+                obj = cls(**kwargs)
+            except Exception as e:
+                return
+
         return cls(**kwargs)
         
     def to_dict(self):
@@ -181,11 +188,11 @@ class Name(Field):
     """A name of a person."""
     
     attributes = ('type',)
-    children = ('prefix', 'first', 'middle', 'last', 'suffix', 'raw')
+    children = ('prefix', 'first', 'middle', 'last', 'suffix', 'raw', 'display')
     types_set = set(['present', 'maiden', 'former', 'alias'])
     
     def __init__(self, prefix=None, first=None, middle=None, last=None, 
-                 suffix=None, raw=None, type_=None, valid_since=None, inferred=None):
+                 suffix=None, raw=None, display=None, type_=None, valid_since=None, inferred=None):
         """`prefix`, `first`, `middle`, `last`, `suffix`, `raw`, `type_`, 
         should all be unicode objects or utf8 encoded strs (will be decoded 
         automatically).
@@ -210,13 +217,8 @@ class Name(Field):
         self.suffix = suffix
         self.raw = raw
         self.type = type_
-    
-    @property
-    def display(self):
-        """A unicode value with the object's data, to be used for displaying 
-        the object in your application."""
-        return unicode(self)
-    
+        self._display = display
+
     @property
     def is_searchable(self):
         """A bool value that indicates whether the name is a valid name to 
@@ -233,14 +235,14 @@ class Address(Field):
     
     attributes = ('type',)
     children = ('country', 'state', 'city', 'po_box', 'zip_code',
-                'street', 'house', 'apartment', 'raw')
+                'street', 'house', 'apartment', 'raw', 'display')
     types_set = set(['home', 'work', 'old'])
     
     def __init__(self, country=None, state=None, city=None, po_box=None, 
                  street=None, house=None, zip_code=None, apartment=None, raw=None, 
-                 type_=None, valid_since=None, inferred=None):
+                 display=None, type_=None, valid_since=None, inferred=None):
         """`country`, `state`, `city`, `po_box`, `street`, `house`, `apartment`, 
-        `raw`, `zip_code` and `type_` should all be unicode objects or utf8 encoded strs 
+        `raw`, `zip_code`, `display` and `type_` should all be unicode objects or utf8 encoded strs
         (will be decoded automatically).
         
         `country` and `state` are country code (like "US") and state code 
@@ -271,22 +273,7 @@ class Address(Field):
         self.apartment = apartment
         self.raw = raw
         self.type = type_
-    
-    @property
-    def display(self):
-        """A unicode value with the object's data, to be used for displaying 
-        the object in your application."""
-        country = self.country if self.state else self.country_full
-        state = self.state if self.city else self.state_full
-        vals = (self.street, self.city, state, self.zip_code, country)
-        disp = u', '.join(filter(None, vals))
-        if self.street and (self.house or self.apartment):
-            prefix = u'-'.join([val for val in (self.house, self.apartment) 
-                                if val])
-            disp = prefix + u' ' + (disp or u'')
-        if self.po_box and not self.street:
-            disp = u' '.join([u'P.O. Box', self.po_box, (disp or u'')])
-        return disp
+        self._display = display
    
     @property
     def is_searchable(self):
@@ -343,12 +330,12 @@ class Phone(Field):
     """A phone number of a person."""
     
     attributes = ('type',)
-    children = ('country_code', 'number', 'extension', 'raw')
+    children = ('country_code', 'number', 'extension', 'raw', 'display', 'display_international')
     types_set = set(['mobile', 'home_phone', 'home_fax', 'work_phone', 
                      'work_fax', 'pager'])
     
-    def __init__(self, country_code=None, number=None, raw=None, extension=None,
-                 type_=None, valid_since=None, inferred=None):
+    def __init__(self, country_code=None, number=None, raw=None, extension=None, display=None,
+                 display_international=None, type_=None, valid_since=None, inferred=None):
         """`country_code`, `number` and `extension` should all be int/long.
         
         `type_` is one of Phone.types_set.
@@ -364,30 +351,15 @@ class Phone(Field):
         self.raw = raw
         self.extension = extension
         self.type = type_
-        # The two following display attributes are available when working with 
-        # a response from the API, both hold unicode values that can be used to 
-        # display the phone in your application.
-        # Note that theses display values are calculated on the server.
-        self.display = u''
-        self.display_international = u''
+        self.display = display
+        self.display_international = display_international
         
     @property
     def is_searchable(self):
         """A bool value that indicates whether the phone is a valid phone 
         to search by."""
         return (self.number and self.country_code) or self.raw
-        #return self.number is not None and \
-               #(not self.country_code or self.country_code == 1)
-            
-    @classmethod
-    def from_dict(cls, d):
-        """Extend Field.from_dict, set display/display_international 
-        attributes."""
-        phone = super(cls, cls).from_dict(d)
-        phone.display = d.get('display', u'')
-        phone.display_international = d.get('display_international', u'')
-        return phone
-        
+
     def to_dict(self):
         """Extend Field.to_dict, take the display_international attribute."""
         d = Field.to_dict(self)
@@ -477,15 +449,19 @@ class Email(Field):
         if not self.is_valid_email:
             return
         return self.address.split('@')[1]    
-        
+
+    @property
+    def display(self):
+        return self.address or self.address_md5
+
         
 class Job(Field):
     
     """Job information of a person."""
     
-    children = ('title', 'organization', 'industry', 'date_range')
+    children = ('title', 'organization', 'industry', 'date_range', 'display')
 
-    def __init__(self, title=None, organization=None, industry=None,
+    def __init__(self, title=None, organization=None, industry=None, display=None,
                  date_range=None, valid_since=None, inferred=None):
         """`title`, `organization`, `industry`, should all be unicode objects 
         or utf8 encoded strs (will be decoded automatically).
@@ -502,35 +478,16 @@ class Job(Field):
         self.organization = organization
         self.industry = industry
         self.date_range = date_range
-    
-    @property
-    def display(self):
-        """A unicode value with the object's data, to be used for displaying 
-        the object in your application."""
-        if self.title and self.organization:
-            disp = self.title + u' at ' + self.organization
-        else:
-            disp = self.title or self.organization or None
-        if disp and self.industry:
-            if self.date_range is not None:
-                disp += u' (%s, %d-%d)' % ((self.industry,) + \
-                                           self.date_range.years_range)
-            else:
-                disp += u' (%s)' % self.industry
-        else:
-            disp = ((disp or u'') + u' ' + (self.industry or u'')).strip()
-            if disp and self.date_range is not None:
-                disp += u' (%d-%d)' % self.date_range.years_range
-        return disp 
+        self._display = display
     
 
 class Education(Field):
     
     """Education information of a person."""
     
-    children = ('degree', 'school', 'date_range')
+    children = ('degree', 'school', 'date_range', 'display')
     
-    def __init__(self, degree=None, school=None, date_range=None,
+    def __init__(self, degree=None, school=None, date_range=None, display=None,
                  valid_since=None, inferred=None):
         """`degree` and `school` should both be unicode objects or utf8 encoded 
         strs (will be decoded automatically).
@@ -546,18 +503,7 @@ class Education(Field):
         self.degree = degree
         self.school = school
         self.date_range = date_range
-    
-    @property
-    def display(self):
-        """A unicode value with the object's data, to be used for displaying 
-        the object in your application."""
-        if self.degree and self.school:
-            disp = self.degree + u' from ' + self.school
-        else:
-            disp = self.degree or self.school or None
-        if disp is not None and self.date_range is not None:
-            disp += u' (%d-%d)' % self.date_range.years_range
-        return disp or u''
+        self._display = display
     
 
 class Image(Field):
@@ -592,6 +538,10 @@ class Image(Field):
             return 'https://thumb.pipl.com/cgi-bin/fdt.fcgi?hg={}&wd={}&favicon={}&th={}&eurl={}'.format(
                     width, height, favicon, detect_face, self.thumbnail_token)
 
+    @property
+    def display(self):
+        return self.url
+
 
 class OriginCountry(Field):
     
@@ -622,9 +572,9 @@ class Language(Field):
     
     """A language the person is familiar with."""
     
-    children = ('language', 'region')
+    children = ('language', 'region', 'display')
 
-    def __init__(self, language=None, region=None, valid_since=None, inferred=None):
+    def __init__(self, language=None, region=None, display=None, valid_since=None, inferred=None):
         """`language` and `region` should be unicode objects 
         or utf8 encoded strs (will be decoded automatically).
         
@@ -635,13 +585,8 @@ class Language(Field):
         Field.__init__(self, valid_since, inferred)
         self.language = language
         self.region = region
+        self._display = display
 
-    @property
-    def display(self):
-        if self.language and self.region:
-            return u"{}_{}".format(self.language, self.region)
-        return self.language or self.region
- 
 
 class Username(Field):
     
@@ -663,6 +608,10 @@ class Username(Field):
         """
         Field.__init__(self, valid_since, inferred)
         self.content = content
+
+    @property
+    def display(self):
+        return self.content
     
     @property
     def is_searchable(self):
@@ -690,7 +639,11 @@ class UserID(Field):
         """
         Field.__init__(self, valid_since, inferred)
         self.content = content
-      
+
+    @property
+    def display(self):
+        return self.content
+
 
 class DOB(Field):
     
@@ -700,9 +653,9 @@ class DOB(Field):
     
     """
     
-    children = ('date_range',)
+    children = ('date_range', 'display')
 
-    def __init__(self, date_range=None, valid_since=None, inferred=None):
+    def __init__(self, date_range=None, display=None, valid_since=None, inferred=None):
         """`date_range` is A DateRange object (piplapis.data.fields.DateRange), 
         the date-of-birth is within this range.
         
@@ -712,19 +665,8 @@ class DOB(Field):
         """
         Field.__init__(self, valid_since, inferred)
         self.date_range = date_range
-    
-    @property
-    def display(self):
-        """A unicode value with the object's data, to be used for displaying 
-        the object in your application.
-        
-        Note: in a DOB object the display is the estimated age.
-        
-        """
-        if self.age is None:
-            return u''
-        return unicode(self.age)
-    
+        self._display = display
+
     @property
     def is_searchable(self):
         return self.date_range is not None
@@ -850,6 +792,10 @@ class URL(Field):
         """A bool value that indicates whether the URL is a valid URL."""
         return bool(self.url and is_valid_url(self.url))
 
+    @property
+    def display(self):
+        return self.url or self.name
+
 
 class Tag(Field):
 
@@ -875,6 +821,10 @@ class Tag(Field):
         Field.__init__(self, valid_since, inferred)
         self.content = content
         self.classification = classification
+
+    @property
+    def display(self):
+        return self.content
 
 
 class DateRange(Serializable):
@@ -951,4 +901,3 @@ class DateRange(Serializable):
         d['start'] = date_to_str(self.start)
         d['end'] = date_to_str(self.end)
         return d
-    
