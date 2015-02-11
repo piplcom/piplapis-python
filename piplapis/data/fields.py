@@ -53,10 +53,12 @@ class Field(Serializable):
         """Return the str representation of the object (encoded with utf8)."""
         if hasattr(self, 'display') and getattr(self, 'display'):
             return self.display.encode('utf8')
-        elif hasattr(self, '_display') and getattr(self, '_display'):
-            return self._display.encode('utf8')
         else:
             return ""
+
+    @property
+    def display(self):
+        return self._display if hasattr(self, '_display') and getattr(self, '_display') else None
 
     def __repr__(self):
         """Return a representation of the object (a valid value for eval())."""
@@ -99,11 +101,6 @@ class Field(Serializable):
             elif key == 'date_range':
                 val = DateRange.from_dict(val)
             kwargs[key.encode('ascii')] = val
-        if 'display' in kwargs:
-            try:
-                obj = cls(**kwargs)
-            except Exception as e:
-                return
 
         return cls(**kwargs)
         
@@ -351,7 +348,7 @@ class Phone(Field):
         self.raw = raw
         self.extension = extension
         self.type = type_
-        self.display = display
+        self._display = display
         self.display_international = display_international
         
     @property
