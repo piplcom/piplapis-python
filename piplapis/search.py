@@ -566,6 +566,31 @@ class SearchAPIResponse(Serializable):
         """
         return self.person.images[0] if self.person and len(self.person.images) > 0 else None
 
+    @property
+    def url(self):
+        """
+        A shortcut method to get the result's person's url.
+        return URL
+        """
+        return self.person.urls[0] if self.person and len(self.person.urls) > 0 else None
+
+    @property
+    def username(self):
+        """
+        A shortcut method to get the result's person's username.
+        return Username
+        """
+        return self.person.usernames[0] if self.person and len(self.person.usernames) > 0 else None
+
+    @property
+    def user_id(self):
+        """
+        A shortcut method to get the result's person's user_id.
+        return UserID
+        """
+        return self.person.user_ids[0] if self.person and len(self.person.user_ids) > 0 else None
+
+
 class SearchAPIError(APIError):
     """an exception raised when the response from the search API contains an
     error."""
