@@ -348,7 +348,7 @@ class SearchAPIResponse(Serializable):
     
     def __init__(self, query=None, person=None, sources=None, 
                  possible_persons=None, warnings_=None, http_status_code=None,
-                 visible_sources=None, available_sources=None):
+                 visible_sources=None, available_sources=None, search_id=None):
         """Args:
         
         query -- A Person object with the query as interpreted by Pipl.
@@ -360,6 +360,9 @@ class SearchAPIResponse(Serializable):
                               query parameters to zoom in on the right person.
         warnings_ -- A list of unicodes. A warning is returned when the query 
                     contains a non-critical error and the search can still run.
+        visible_sources -- the number of sources in response
+        available_sources -- the total number of known sources for this search
+        search_id -- a unique ID which identifies this search. Useful for debugging.
                     
         """
         self.query = query
@@ -370,6 +373,7 @@ class SearchAPIResponse(Serializable):
         self.http_status_code = http_status_code
         self.visible_sources = visible_sources
         self.available_sources = available_sources
+        self.search_id = search_id
         
     @property
     def matching_sources(self):
@@ -434,6 +438,7 @@ class SearchAPIResponse(Serializable):
         visible_sources = d.get('@visible_sources')
         available_sources = d.get('@available_sources')
         warnings_ = d.get('warnings', [])
+        search_id = d.get('@search_id')
         query = d.get('query') or None
         if query:
             query = Person.from_dict(query)
@@ -447,7 +452,8 @@ class SearchAPIResponse(Serializable):
         return SearchAPIResponse(query=query, person=person, sources=sources,
                                  possible_persons=possible_persons,
                                  warnings_=warnings_, http_status_code=http_status_code,
-                                 visible_sources=visible_sources, available_sources=available_sources)
+                                 visible_sources=visible_sources, available_sources=available_sources,
+                                 search_id=search_id)
 
     def to_dict(self):
         """Return a dict representation of the response."""
@@ -458,6 +464,8 @@ class SearchAPIResponse(Serializable):
             d['@visible_sources'] = self.visible_sources
         if self.available_sources:
             d['@available_sources'] = self.available_sources
+        if self.search_id:
+            d['@search_id'] = self.search_id
         if self.warnings:
             d['warnings'] = self.warnings
         if self.query is not None:
@@ -589,6 +597,14 @@ class SearchAPIResponse(Serializable):
         return UserID
         """
         return self.person.user_ids[0] if self.person and len(self.person.user_ids) > 0 else None
+
+    @property
+    def relationship(self):
+        """
+        A shortcut method to get the result's person's most prominent relationship.
+        return Relationship
+        """
+        return self.person.relationships[0] if self.person and len(self.person.relationships) > 0 else None
 
 
 class SearchAPIError(APIError):

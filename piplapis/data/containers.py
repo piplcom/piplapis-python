@@ -163,9 +163,10 @@ class Relationship(Serializable, FieldsContainer):
             d['@valid_since'] = datetime_to_str(self.valid_since)
         d.update(self.fields_to_dict())
         return d
+
+    def __str__(self):
+        return str(self.names[0]) if self.names and len(self.names) > 0 else ""
  
-
-
 
 class Source(Serializable, FieldsContainer):
 
