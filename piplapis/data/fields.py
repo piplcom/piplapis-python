@@ -194,7 +194,7 @@ class Name(Field):
         should all be unicode objects or utf8 encoded strs (will be decoded 
         automatically).
         
-        `raw` is an unparsed name like "Eric T Van Cartman", usefull when you 
+        `raw` is an unparsed name like "Clark J. Kent", usefull when you
         want to search by name and don't want to work hard to parse it.
         Note that in response data there's never name.raw, the names in 
         the response are always parsed, this is only for querying with 
@@ -424,9 +424,9 @@ class Email(Field):
         """unicode, the username part of the email or None if the email is 
         invalid.
         
-        >>> email = Email(address='eric@cartman.com')
+        >>> email = Email(address='clark.kent@example.com')
         >>> email.username
-        u'eric'
+        u'clark'
         
         """
         if not self.is_valid_email:
@@ -438,9 +438,9 @@ class Email(Field):
         """unicode, the domain part of the email or None if the email is 
         invalid.
         
-        >>> email = Email(address='eric@cartman.com')
+        >>> email = Email(address='clark.kent@example.com')
         >>> email.domain
-        u'cartman.com'
+        u'example.com'
         
         """
         if not self.is_valid_email:
