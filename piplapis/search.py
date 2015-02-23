@@ -25,7 +25,6 @@ from piplapis.data.utils import Serializable
 
 
 class SearchAPIRequest(object):
-    
     """A request to Pipl's Search API.
     
     Building the request from the query parameters can be done in two ways:
@@ -65,42 +64,42 @@ class SearchAPIRequest(object):
         "all" - all sources will be shown.
         "matching" - only sources belonging to a matching person will be shown.
     hide_sponsored - boolean (default False), whether to hide sponsored results.
-    possible_results - boolean (default True), whether to show possible persons (persons 
+    minimum_match - a float between 0 and 1, to define the minimum match under which possible persons will not be returned.
     that may be the person you're looking for)
     live_feeds - boolean (default True), whether to use live data feeds. Can be turned off 
     for performance.
     """
-    
+
     HEADERS = {'User-Agent': 'piplapis/python/%s' % piplapis.__version__}
-    BASE_URL = 'http://api.pipl.com/search/v4/?'
-    # HTTPS is also supported:
-    #BASE_URL = 'https://api.pipl.com/search/v4/?'
+    BASE_URL = '{}://api.pipl.com/search/v4/?'
 
     # The following are default settings for all request objects
     # You can set them once instead of passing them to the constructor every time
     default_api_key = 'sample_key'
+    default_use_https = False
     default_minimum_probability = None
     default_show_sources = None
-    default_possible_results = None
+    default_minimum_match = None
     default_hide_sponsored = None
     default_live_feeds = None
 
     @classmethod
     def set_default_settings(cls, api_key=None, minimum_probability=None, show_sources=None,
-                             possible_results=None, hide_sponsored=None, live_feeds=None):
+                             minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=False):
         cls.default_api_key = api_key
         cls.default_minimum_probability = minimum_probability
         cls.default_show_sources = show_sources
-        cls.default_possible_results = possible_results
+        cls.default_minimum_match = minimum_match
         cls.default_hide_sponsored = hide_sponsored
         cls.default_live_feeds = live_feeds
+        cls.default_use_https = use_https
 
     def __init__(self, api_key=None, first_name=None, middle_name=None,
                  last_name=None, raw_name=None, email=None, phone=None, country_code=None,
                  raw_phone=None, username=None, country=None, state=None, city=None,
                  raw_address=None, from_age=None, to_age=None, person=None,
                  search_pointer=None, minimum_probability=None, show_sources=None,
-                 possible_results=None, hide_sponsored=None, live_feeds=None):
+                 minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=None):
         """Initiate a new request object with given query params.
         
         Each request must have at least one searchable parameter, meaning 
@@ -142,8 +141,7 @@ class SearchAPIRequest(object):
         minimum_probability -- float (0-1). The minimum required confidence for inferred data.
         show_sources -- str, one of "matching"/"all". "all" will show all sources, "matching"
                         only those of the matching person. If not set, no sources will be shown.
-        possible_results -- bool, default False. Whether to show possible persons. If set to false,
-                            only a person match will be returned.
+        minimum_match -- float (0-1). The minimum required match under which possible persons will not be returned.
         live_feeds -- bool, default True. Whether to use live feeds. Only relevant in plans that include
                       live feeds. Can be set to False for performance.
         hide_sponsored -- bool, default False. Whether to hide sponsored results.
@@ -178,9 +176,10 @@ class SearchAPIRequest(object):
         self.api_key = api_key or self.default_api_key
         self.show_sources = show_sources or self.default_show_sources
         self.live_feeds = live_feeds or self.default_live_feeds
-        self.possible_results = possible_results or self.default_possible_results
+        self.minimum_match = minimum_match or self.default_minimum_match
         self.minimum_probability = minimum_probability or self.default_minimum_probability
         self.hide_sponsored = hide_sponsored or self.default_hide_sponsored
+        self.use_https = use_https
 
     def validate_query_params(self, strict=True):
         """Check if the request is valid and can be sent, raise ValueError if 
@@ -194,8 +193,9 @@ class SearchAPIRequest(object):
         """
         if not self.api_key:
             raise ValueError('API key is missing')
-        if strict and self.possible_results is not None and type(self.possible_results) is not bool:
-            raise ValueError('possible_results should be a boolean')
+        if strict and self.minimum_match and (type(self.minimum_match) is not float or
+                                                      self.minimum_match > 1 or self.minimum_match < 0):
+            raise ValueError('minimum_match should be a float between 0 and 1')
         if strict and self.hide_sponsored is not None and type(self.hide_sponsored) is not bool:
             raise ValueError('hide_sponsored should be a boolean')
         if strict and self.live_feeds is not None and type(self.live_feeds) is not bool:
@@ -203,19 +203,19 @@ class SearchAPIRequest(object):
         if strict and self.show_sources not in ("all", "matching", "false", False, None):
             raise ValueError('show_sources has a wrong value. Should be "matching", "all", or None')
         if strict and self.minimum_probability and (type(self.minimum_probability) is not float or
-                                                    self.minimum_probability > 1 or self.minimum_probability < 0):
+                                                            self.minimum_probability > 1 or self.minimum_probability < 0):
             raise ValueError('minimum_probability should be a float between 0 and 1')
         if not self.person.is_searchable:
             raise ValueError('No valid name/username/phone/email or search pointer in request')
         if strict and self.person.unsearchable_fields:
-            raise ValueError('Some fields are unsearchable: %s' 
+            raise ValueError('Some fields are unsearchable: %s'
                              % self.person.unsearchable_fields)
-        
+
     @property
     def url(self):
         """The URL of the request (str)."""
         query = self.get_search_query()
-        return SearchAPIRequest.BASE_URL + urllib.urlencode(query, doseq=True)
+        return self.get_base_url() + urllib.urlencode(query, doseq=True)
 
     def get_search_query(self):
         query = {"key": self.api_key}
@@ -225,8 +225,8 @@ class SearchAPIRequest(object):
             query['person'] = self.person.to_json()
         if self.minimum_probability is not None:
             query['minimum_probability'] = self.minimum_probability
-        if self.possible_results is not None:
-            query['possible_results'] = self.possible_results
+        if self.minimum_match is not None:
+            query['minimum_match'] = self.minimum_match
         if self.hide_sponsored is not None:
             query['hide_sponsored'] = self.hide_sponsored
         if self.live_feeds is not None:
@@ -262,8 +262,10 @@ class SearchAPIRequest(object):
         
         """
         self.validate_query_params(strict=strict_validation)
+
         query = self.get_search_query()
-        request = urllib2.Request(url=SearchAPIRequest.BASE_URL, data=urllib.urlencode(query, True), headers=SearchAPIRequest.HEADERS)
+        request = urllib2.Request(url=self.get_base_url(), data=urllib.urlencode(query, True),
+                                  headers=SearchAPIRequest.HEADERS)
         try:
             json_response = urllib2.urlopen(request).read()
         except urllib2.HTTPError as e:
@@ -275,7 +277,7 @@ class SearchAPIRequest(object):
             except ValueError:
                 raise e
         return SearchAPIResponse.from_json(json_response)
-    
+
     def send_async(self, callback, strict_validation=True):
         """Same as send() but in a non-blocking way.
         
@@ -298,17 +300,22 @@ class SearchAPIRequest(object):
         >>> do_other_things()
         
         """
+
         def target():
             try:
                 response = self.send(strict_validation)
                 callback(response=response)
             except Exception as e:
                 callback(error=e)
+
         threading.Thread(target=target).start()
+
+    def get_base_url(self):
+        protocol = "https" if self.use_https or (self.use_https is None and self.default_use_https) else "http"
+        return self.BASE_URL.format(protocol)
 
 
 class SearchAPIResponse(Serializable):
-
     """a response from Pipl's Search API.
 
     a response comprises the three things returned as a result to your query:
@@ -345,8 +352,8 @@ class SearchAPIResponse(Serializable):
     also see how the name/address from your query were parsed in case you
     passed raw_name/raw_address in the query.
     """
-    
-    def __init__(self, query=None, person=None, sources=None, 
+
+    def __init__(self, query=None, person=None, sources=None,
                  possible_persons=None, warnings_=None, http_status_code=None,
                  visible_sources=None, available_sources=None, search_id=None):
         """Args:
@@ -374,7 +381,7 @@ class SearchAPIResponse(Serializable):
         self.visible_sources = visible_sources
         self.available_sources = available_sources
         self.search_id = search_id
-        
+
     @property
     def matching_sources(self):
         """Sources that match the person from the query.
@@ -384,7 +391,7 @@ class SearchAPIResponse(Serializable):
         Essentially, these are the sources that make up the Person object.
         """
         return [source for source in self.sources if source.match == 1.]
-        
+
     def group_sources(self, key_function):
         """Return a dict with the sources grouped by the key returned by 
         `key_function`.
@@ -399,7 +406,7 @@ class SearchAPIResponse(Serializable):
         sorted_sources = sorted(self.sources, key=key_function)
         grouped_sources = itertools.groupby(sorted_sources, key=key_function)
         return dict([(key, list(group)) for key, group in grouped_sources])
-    
+
     def group_sources_by_domain(self):
         """Return the sources grouped by the domain they came from.
         
@@ -409,7 +416,7 @@ class SearchAPIResponse(Serializable):
         """
         key_function = lambda source: source.domain
         return self.group_sources(key_function)
-    
+
     def group_sources_by_category(self):
         """Return the sources grouped by their category. 
         
