@@ -529,8 +529,8 @@ class Image(Field):
                 "favicon": favicon,
                 "zoom_face": zoom_face,
             }
-            thumb_url_base = "{}://thumb.pipl.com/api/?token={}&".format("https" if use_https else "http",
-                                                                         self.thumbnail_token)
+            thumb_url_base = "{}://thumb.pipl.com/image?token={}&".format("https" if use_https else "http",
+                                                                          self.thumbnail_token)
             return thumb_url_base + urlencode(params)
 
     @property
