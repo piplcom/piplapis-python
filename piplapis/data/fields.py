@@ -684,6 +684,8 @@ class DOB(Field):
         """A tuple of two ints - the minimum and maximum age of the person."""
         if self.date_range is None:
             return None, None
+        if not (self.date_range.start and self.date_range.end):
+            return self.age, self.age
         start_date = DateRange(self.date_range.start, self.date_range.start)
         end_date = DateRange(self.date_range.end, self.date_range.end)
         start_age = DOB(date_range=end_date).age
@@ -829,14 +831,18 @@ class DateRange(Serializable):
         date-of-birth is known) just pass the same value for `start` and `end`.
         
         """
-        if start > end:
+        if (start and end) and start > end:
             start, end = end, start
         self.start = start
         self.end = end
 
-    def __unicode__(self):
+    def __str__(self):
         """Return the unicode representation of the object."""
-        return u' - '.join([unicode(self.start), unicode(self.end)])
+        if self.start is None:
+            return ""
+        if self.end is None:
+            return str(self.start)
+        return ' - '.join([str(self.start), str(self.end)])
 
     def __repr__(self):
         """Return a representation of the object (a valid value for eval())."""
@@ -851,17 +857,21 @@ class DateRange(Serializable):
     def is_exact(self):
         """True if the object holds an exact date (start=end), 
         False otherwise."""
-        return self.start == self.end
+        return not (self.start or self.end) or (self.start == self.end)
 
     @property
     def middle(self):
         """The middle of the date range (a datetime.date object)."""
+        if not (self.start and self.end):
+            return self.start or self.end
         return self.start + (self.end - self.start) / 2
 
     @property
     def years_range(self):
         """A tuple of two ints - the year of the start date and the year of the 
-        end date."""
+        end date. Returns None when there is only a start, or only an end date. """
+        if not self.start and self.end:
+            return None
         return self.start.year, self.end.year
 
     @staticmethod
@@ -876,15 +886,19 @@ class DateRange(Serializable):
         """Transform the dict to a DateRange object."""
         start = d.get('start')
         end = d.get('end')
-        if not (start and end):
-            raise ValueError('DateRange must have both start and end')
-        start = str_to_date(start)
-        end = str_to_date(end)
+        if not (start or end):
+            raise ValueError('DateRange must have at least a start or an end date')
+        if start:
+            start = str_to_date(start)
+        if end:
+            end = str_to_date(end)
         return DateRange(start, end)
 
     def to_dict(self):
         """Transform the date-range to a dict."""
         d = {}
-        d['start'] = date_to_str(self.start)
-        d['end'] = date_to_str(self.end)
+        if self.start:
+            d['start'] = date_to_str(self.start)
+        if self.end:
+            d['end'] = date_to_str(self.end)
         return d
