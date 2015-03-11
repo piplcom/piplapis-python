@@ -181,14 +181,14 @@ class Source(Serializable, FieldsContainer):
     For example:
 
     >>> from piplapis.data import Source, Email, Phone
-    >>> fields = [Email(address='eric@cartman.com'), Phone(number=999888777)]
+    >>> fields = [Email(address='clark.kent@example.com'), Phone(number=999888777)]
     >>> source = Source(fields=fields)
     >>> source.emails
-    [Email(address=u'eric@cartman.com')]
+    [Email(address=u'clark.kent@example.com')]
     >>> source.phones
     [Phone(number=999888777)]
 
-    Records come as results for a query and therefore they have attributes that 
+    Sources come as results for a query and therefore they have attributes that
     indicate if and how much they match the query. They also have a validity 
     timestamp available as an attribute.
 
