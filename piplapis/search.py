@@ -331,7 +331,7 @@ class SearchAPIResponse(Serializable):
       that the response will not contain a person object.
       on the other hand, if you search by a unique identifier such as email or
       a combination of identifiers that only lead to one person, such as
-      "eric Cartman, Age 22, From South Park, CO, US", you can expect to get
+      "Clark Kent from Smallville, KS, US", you can expect to get
       a response containing a single person object.
    
     - a list of possible persons (piplapis.data.containers.Person). If our identity-resolution
@@ -339,9 +339,9 @@ class SearchAPIResponse(Serializable):
       drill down using the persons' search_pointer field.
 
     - a list of sources (piplapis.data.containers.Source) that fully/partially
-      match the person from your query, if the query was for "Eric Cartman from
-      colorado US" the response might also contain sources of "Eric Cartman
-      from US" (without Colorado), if you need to differentiate between sources
+      match the person from your query, if the query was for "Clark Kent from
+      Kansas US" the response might also contain sources of "Clark Kent
+      from US" (without Kansas), if you need to differentiate between sources
       with full match to the query and partial match or if you want to get a
       score on how likely is that source to be related to the person you are
       searching please refer to the source's "match" field.
