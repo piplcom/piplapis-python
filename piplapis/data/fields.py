@@ -157,7 +157,10 @@ class Ethnicity(Field):
     """
     An ethnicity value.
     The content will be a string with one of the following values (based on US census definitions):
-
+        'white', 'black', 'american_indian', 'alaska_nativeian_indian',
+        'chinese', 'filipino', 'other_asian', 'japanese',
+        'korean', 'viatnamese', 'native_hawaiian', 'guamanian',
+        'chamorro', 'samoan', 'other_pacific_islander', 'other'.
     """
     children = ('content', )
 
@@ -857,7 +860,7 @@ class DateRange(Serializable):
     def is_exact(self):
         """True if the object holds an exact date (start=end), 
         False otherwise."""
-        return not (self.start or self.end) or (self.start == self.end)
+        return (self.start and self.end) and (self.start == self.end)
 
     @property
     def middle(self):
@@ -870,7 +873,7 @@ class DateRange(Serializable):
     def years_range(self):
         """A tuple of two ints - the year of the start date and the year of the 
         end date. Returns None when there is only a start, or only an end date. """
-        if not self.start and self.end:
+        if not (self.start and self.end):
             return None
         return self.start.year, self.end.year
 
