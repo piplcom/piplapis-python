@@ -157,7 +157,7 @@ class Ethnicity(Field):
     """
     An ethnicity value.
     The content will be a string with one of the following values (based on US census definitions):
-        'white', 'black', 'american_indian', 'alaska_nativeian_indian',
+        'white', 'black', 'american_indian', 'alaska_native',
         'chinese', 'filipino', 'other_asian', 'japanese',
         'korean', 'viatnamese', 'native_hawaiian', 'guamanian',
         'chamorro', 'samoan', 'other_pacific_islander', 'other'.
@@ -166,7 +166,7 @@ class Ethnicity(Field):
 
     def __init__(self, content=None, valid_since=None, inferred=None):
         """
-        `content` is the ethnicity value. One of: 'white', 'black', 'american_indian', 'alaska_nativeian_indian',
+        `content` is the ethnicity value. One of: 'white', 'black', 'american_indian', 'alaska_native',
             'chinese', 'filipino', 'other_asian', 'japanese',
             'korean', 'viatnamese', 'native_hawaiian', 'guamanian',
             'chamorro', 'samoan', 'other_pacific_islander', 'other'.
