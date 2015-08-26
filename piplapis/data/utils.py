@@ -48,7 +48,7 @@ def str_to_datetime(s):
 
 def datetime_to_str(dt):
     """Transform a datetime object to an str object."""
-    return dt.isoformat()
+    return dt.strftime(TIMESTAMP_FORMAT)
 
 
 def str_to_date(s):
