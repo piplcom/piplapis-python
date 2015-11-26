@@ -30,5 +30,7 @@ class APIError(Exception, Serializable):
     
     def to_dict(self):
         """Return a dict representation of the error."""
-        return {'error': self.error, '@http_status_code': self.http_status_code}
-        
+        return {'error': self.error,
+                '@http_status_code': self.http_status_code,
+                'warnings': self.warnings}
+
