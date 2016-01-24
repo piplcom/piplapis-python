@@ -82,10 +82,12 @@ class SearchAPIRequest(object):
     default_minimum_match = None
     default_hide_sponsored = None
     default_live_feeds = None
+    default_match_requirements = None
 
     @classmethod
     def set_default_settings(cls, api_key=None, minimum_probability=None, show_sources=None,
-                             minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=False):
+                             minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=False,
+                             match_requirements=None):
         cls.default_api_key = api_key
         cls.default_minimum_probability = minimum_probability
         cls.default_show_sources = show_sources
@@ -93,13 +95,15 @@ class SearchAPIRequest(object):
         cls.default_hide_sponsored = hide_sponsored
         cls.default_live_feeds = live_feeds
         cls.default_use_https = use_https
+        cls.default_match_requirements = match_requirements
 
     def __init__(self, api_key=None, first_name=None, middle_name=None,
                  last_name=None, raw_name=None, email=None, phone=None, country_code=None,
                  raw_phone=None, username=None, country=None, state=None, city=None,
                  raw_address=None, from_age=None, to_age=None, person=None,
                  search_pointer=None, minimum_probability=None, show_sources=None,
-                 minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=None):
+                 minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=None, 
+                 match_requirements=None):
         """Initiate a new request object with given query params.
         
         Each request must have at least one searchable parameter, meaning 
@@ -109,42 +113,47 @@ class SearchAPIRequest(object):
         
         Args:
         
-        api_key -- str, a valid API key (use "samplekey" for experimenting).
+        :param api_key: str, a valid API key (use "samplekey" for experimenting).
                    Note that you can set a default API key 
                    (piplapis.search.default_api_key = '<your_key>') instead of 
                    passing it to each request object. 
-        first_name -- unicode, minimum 2 chars.
-        middle_name -- unicode. 
-        last_name -- unicode, minimum 2 chars.
-        raw_name -- unicode, an unparsed name containing at least a first name 
+        :param first_name: unicode, minimum 2 chars.
+        :param middle_name: unicode. 
+        :param last_name: unicode, minimum 2 chars.
+        :param raw_name: unicode, an unparsed name containing at least a first name 
                     and a last name.
-        email -- unicode.
-        phone -- int/long. A national phone with no formatting.
-        country_code -- int. The phone country code
-        raw_phone -- string. A phone to be sent as-is, will be parsed by Pipl.
-        username -- unicode, minimum 4 chars.
-        country -- unicode, a 2 letter country code from:
+        :param email: unicode.
+        :param phone: int/long. A national phone with no formatting.
+        :param country_code: int. The phone country code
+        :param raw_phone: string. A phone to be sent as-is, will be parsed by Pipl.
+        :param username: unicode, minimum 4 chars.
+        :param country: unicode, a 2 letter country code from:
                    http://en.wikipedia.org/wiki/ISO_3166-2
-        state -- unicode, a state code from:
+        :param state: unicode, a state code from:
                  http://en.wikipedia.org/wiki/ISO_3166-2%3AUS
                  http://en.wikipedia.org/wiki/ISO_3166-2%3ACA
-        city -- unicode.
-        raw_address -- unicode, an unparsed address.
-        from_age -- int.
-        to_age -- int.
-        person -- A Person object (available at piplapis.data.Person).
+        :param city: unicode.
+        :param raw_address: unicode, an unparsed address.
+        :param from_age: int.
+        :param to_age: int.
+        :param person: A Person object (available at piplapis.data.Person).
                   The person can contain every field allowed by the data-model
                   (see piplapis.data.fields) and can hold multiple fields of
                   the same type (for example: two emails, three addresses etc.)
-        search_pointer -- str, sending a search pointer of a possible person will retrieve 
+        :param search_pointer: str, sending a search pointer of a possible person will retrieve 
                           more data related to this person.
-        minimum_probability -- float (0-1). The minimum required confidence for inferred data.
-        show_sources -- str or bool, one of "matching"/"all". "all" will show all sources, "matching"
+        :param minimum_probability: float (0-1). The minimum required confidence for inferred data.
+        :param show_sources: str or bool, one of "matching"/"all". "all" will show all sources, "matching"
                         only those of the matching person. Boolean True will behave like "matching".
-        minimum_match -- float (0-1). The minimum required match under which possible persons will not be returned.
-        live_feeds -- bool, default True. Whether to use live feeds. Only relevant in plans that include
+        :param minimum_match: float (0-1). The minimum required match under which possible persons will not be returned.
+        :param live_feeds: bool, default True. Whether to use live feeds. Only relevant in plans that include
                       live feeds. Can be set to False for performance.
-        hide_sponsored -- bool, default False. Whether to hide sponsored results.
+        :param hide_sponsored: bool, default False. Whether to hide sponsored results.
+        :param use_https: bool, default False. Whether to use an encrypted connection.
+        :param match_requirements: str/unicode, a match requirements criteria. This criteria defines what fields
+                                   must be present in an API response in order for it to be returned as a match.
+                                   For example: "email" or "email or phone", or "email or (phone and name)"
+
         Each of the arguments that should have a unicode value accepts both
         unicode objects and utf8 encoded str (will be decoded automatically).
         """
@@ -179,6 +188,7 @@ class SearchAPIRequest(object):
         self.minimum_match = minimum_match or self.default_minimum_match
         self.minimum_probability = minimum_probability or self.default_minimum_probability
         self.hide_sponsored = hide_sponsored or self.default_hide_sponsored
+        self.match_requirements = match_requirements or self.default_match_requirements
         self.use_https = use_https
 
     def validate_query_params(self, strict=True):
@@ -199,6 +209,8 @@ class SearchAPIRequest(object):
             raise ValueError('hide_sponsored should be a boolean')
         if strict and self.live_feeds is not None and type(self.live_feeds) is not bool:
             raise ValueError('live_feeds should be a boolean')
+        if strict and self.match_requirements is not None and not isinstance(self.match_requirements, basestring):
+            raise ValueError('match_requirements should be an str or unicode object')
         if strict and self.show_sources not in ("all", "matching", "false", False, None):
             raise ValueError('show_sources has a wrong value. Should be "matching", "all", or None')
         if strict and self.minimum_probability and (type(self.minimum_probability) is not float or
@@ -228,6 +240,8 @@ class SearchAPIRequest(object):
             query['minimum_match'] = self.minimum_match
         if self.hide_sponsored is not None:
             query['hide_sponsored'] = self.hide_sponsored
+        if self.match_requirements is not None:
+            query['match_requirements'] = self.match_requirements
         if self.live_feeds is not None:
             query['live_feeds'] = self.live_feeds
         if self.show_sources is not None:
