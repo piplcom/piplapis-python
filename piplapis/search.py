@@ -19,6 +19,7 @@ import itertools
 import threading
 
 import piplapis
+from piplapis.data.available_data import AvailableData
 from piplapis.error import APIError
 from piplapis.data import *
 from piplapis.data.utils import Serializable
@@ -326,7 +327,15 @@ class SearchAPIRequest(object):
 class SearchAPIResponse(Serializable):
     """a response from Pipl's Search API.
 
-    a response comprises the three things returned as a result to your query:
+    a response contains 4 main data elements:
+
+    - available data summary (piplapis.data.available_data.AvailableData).
+      This is a summary of the data available for your search. Please note that
+      some available data may not be present in the response due to data package limits.
+      The available data contains two sub-elements, basic and premium (if you're on premium,
+      basic will be None):
+      - basic: shows the data available with a basic coverage plan
+      - premium: shows the data available with a premium coverage plan
 
     - a person (piplapis.data.containers.Person) that is the data object
       representing all the information available for the person you were
@@ -346,13 +355,13 @@ class SearchAPIResponse(Serializable):
       engine did not find a definite match, you can use this list to further
       drill down using the persons' search_pointer field.
 
-    - a list of sources (piplapis.data.containers.Source) that fully/partially
-      match the person from your query, if the query was for "Clark Kent from
-      Kansas US" the response might also contain sources of "Clark Kent
-      from US" (without Kansas), if you need to differentiate between sources
-      with full match to the query and partial match or if you want to get a
-      score on how likely is that source to be related to the person you are
-      searching please refer to the source's "match" field.
+    - a list of sources (piplapis.data.containers.Source). Sources are the breakdown
+      of a response's data into its origin - so each source will contain data that came
+      from one source (e.g. a facebook profile, a public record, etc).
+      Sources may contain strictly data that belongs to the person returned as a
+      perfect match (only these are shown if the search contained show_sources=matching),
+      or they may belong to possibly related people. In any case, by default API
+      responses do not contain sources, and to use them you must pass a value for show_sources.
    
     the response also contains the query as it was interpreted by Pipl. This
     part is useful for verification and debugging, if some query parameters
@@ -363,22 +372,21 @@ class SearchAPIResponse(Serializable):
 
     def __init__(self, query=None, person=None, sources=None,
                  possible_persons=None, warnings_=None, http_status_code=None,
-                 visible_sources=None, available_sources=None, search_id=None, *args, **kwargs):
-        """Args:
-        
-        query -- A Person object with the query as interpreted by Pipl.
-        person -- A Person object with data about the person in the query.
-        sources -- A list of Source objects with full/partial match to the 
-                   query.
-        possible_persons -- A list of Person objects, each of these is an 
+                 visible_sources=None, available_sources=None, search_id=None,
+                 match_requirements=None, available_data=None, *args, **kwargs):
+        """
+        :param query: A Person object with the query as interpreted by Pipl.
+        :param person: A Person object with data about the person in the query.
+        :param sources: A list of Source objects with full/partial match to the query.
+        :param possible_persons: A list of Person objects, each of these is an
                               expansion of the original query, giving additional
                               query parameters to zoom in on the right person.
-        warnings_ -- A list of unicodes. A warning is returned when the query 
+        :param warnings_: A list of unicodes. A warning is returned when the query
                     contains a non-critical error and the search can still run.
-        visible_sources -- the number of sources in response
-        available_sources -- the total number of known sources for this search
-        search_id -- a unique ID which identifies this search. Useful for debugging.
-                    
+        :param visible_sources: int, the number of sources in response
+        :param available_sources: int, the total number of known sources for this search
+        :param search_id: str or unicode, a unique ID which identifies this search. Useful for debugging.
+        :param available_data: an AvailableData object, showing the data available for your query.
         """
         self.query = query
         self.person = person
@@ -389,6 +397,9 @@ class SearchAPIResponse(Serializable):
         self.visible_sources = visible_sources
         self.available_sources = available_sources
         self.search_id = search_id
+        self.available_data = available_data
+        self.match_requirements = match_requirements
+        self.available_data = available_data
 
     @property
     def matching_sources(self):
@@ -455,11 +466,19 @@ class SearchAPIResponse(Serializable):
         available_sources = d.get('@available_sources')
         warnings_ = d.get('warnings', [])
         search_id = d.get('@search_id')
+
+        match_requirements = d.get('match_requirements')
+
+        available_data = d.get('available_data') or None
+        if available_data is not None:
+            available_data = AvailableData.from_dict(available_data)
+
         query = d.get('query') or None
-        if query:
+        if query is not None:
             query = Person.from_dict(query)
+
         person = d.get('person') or None
-        if person:
+        if person is not None:
             person = Person.from_dict(person)
         sources = d.get('sources')
         if sources:
@@ -469,7 +488,8 @@ class SearchAPIResponse(Serializable):
                                  possible_persons=possible_persons,
                                  warnings_=warnings_, http_status_code=http_status_code,
                                  visible_sources=visible_sources, available_sources=available_sources,
-                                 search_id=search_id)
+                                 search_id=search_id, match_requirements=match_requirements,
+                                 available_data=available_data)
 
     def to_dict(self):
         """Return a dict representation of the response."""
@@ -484,6 +504,10 @@ class SearchAPIResponse(Serializable):
             d['@search_id'] = self.search_id
         if self.warnings:
             d['warnings'] = self.warnings
+        if self.match_requirements:
+            d['match_requirements'] = self.match_requirements
+        if self.available_data is not None:
+            d['available_data'] = self.available_data.to_dict()
         if self.query is not None:
             d['query'] = self.query.to_dict()
         if self.person is not None:
