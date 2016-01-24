@@ -26,12 +26,14 @@ class Serializable(object):
     Every inherited class must implement its own to_dict method that transforms
     an object to a dict and from_dict method that transforms a dict to 
     an object.
-    
     """
     
     @classmethod
     def from_json(cls, json_str):
-        """Deserialize the object from a JSON string."""
+        """
+        Deserialize the object from a JSON string.
+        :param json_str: str or unicode. The JSON string to deserialize.
+        """
         d = json.loads(json_str)
         return cls.from_dict(d)
         
@@ -40,45 +42,68 @@ class Serializable(object):
         d = self.to_dict()
         return json.dumps(d)
 
+    def to_dict(self):
+        raise NotImplementedError
+
+    @classmethod
+    def from_dict(cls, d):
+        raise NotImplementedError
+
 
 def str_to_datetime(s):
-    """Transform an str object to a datetime object."""
+    """Transform an str object to a datetime object.
+    :param s: str or unicode. The datetime string.
+    """
     return datetime.datetime.strptime(s, TIMESTAMP_FORMAT)
 
 
 def datetime_to_str(dt):
-    """Transform a datetime object to an str object."""
+    """Transform a datetime object to an str object.
+    :param dt: datetime object to convert to a string.
+    """
     return dt.strftime(TIMESTAMP_FORMAT)
 
 
 def str_to_date(s):
-    """Transform an str object to a date object."""
+    """Transform an str object to a date object.
+    :param s: str or unicode. The date string.
+    """
     return datetime.datetime.strptime(s, DATE_FORMAT).date()
 
 
 def date_to_str(d):
-    """Transform a date object to an str object."""
+    """Transform a date object to an str object.
+    :param d: date object to convert to a string.
+    """
     return d.isoformat()
 
 
 def is_valid_url(url):
-    """Return True if `url` (str/unicode) is a valid URL, False otherwise."""
+    """Return True if `url` (str/unicode) is a valid URL, False otherwise.
+    :param url: str or unicode. The URL to validate.
+    """
     return bool(VALID_URL_REGEX.search(url))
 
 
 def alpha_chars(s):
-    """Strip all non alphabetic characters from the str/unicode `s`."""
+    """Strip all non alphabetic characters from the str/unicode `s`.
+    :param s: str or unicode. The string to strip.
+    """
     return ''.join([c for c in s if c.isalpha()])
     
     
 def alnum_chars(s):
-    """Strip all non alphanumeric characters from the str/unicode `s`."""
+    """Strip all non alphanumeric characters from the str/unicode `s`.
+    :param s: str or unicode. The string to strip.
+    """
     return ''.join([c for c in s if c.isalnum()])
 
 
 def to_utf8(obj):
     """Return str representation of obj, if s is a unicode object it's encoded
-    with utf8."""
+    with utf8.
+    :param obj: The object to represent in utf8.
+    """
     if isinstance(obj, unicode):
         return obj.encode('utf8')
     return str(obj)
@@ -86,7 +111,10 @@ def to_utf8(obj):
 
 def to_unicode(obj):
     """Return unicode representation of obj, if s is an str object it's decoded
-    with utf8."""
+    with utf8.
+    :param obj: The object to decode to unicode.
+
+    """
     if isinstance(obj, str):
         return obj.decode('utf8')
     return unicode(obj)

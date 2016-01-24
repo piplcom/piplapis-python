@@ -33,8 +33,7 @@ class SearchAPIRequest(object):
                parameters):
             
     >>> from piplapis.search import SearchAPIRequest
-    >>> request = SearchAPIRequest(api_key='samplekey', 
-                                   email='clark.kent@example.com')
+    >>> request = SearchAPIRequest(api_key='samplekey', email='clark.kent@example.com')
     >>> response = request.send()
     
     Option 2 - using the data-model (useful for more complex queries; for 
@@ -46,11 +45,11 @@ class SearchAPIRequest(object):
     >>> from piplapis.search import SearchAPIRequest
     >>> from piplapis.data import Person, Name, Address, Job
     >>> fields = [Name(first='Clark', last='Kent'),
-                  Address(country='US', state='KS', city='Smallville'),
-                  Address(country='US', state='KS', city='Metropolis'),
-                  Job(title='Field Reporter')]
+    >>>           Address(country='US', state='KS', city='Smallville'),
+    >>>           Address(country='US', state='KS', city='Metropolis'),
+    >>>           Job(title='Field Reporter')]
     >>> request = SearchAPIRequest(api_key='samplekey',
-                                   person=Person(fields=fields))
+    >>>                            person=Person(fields=fields))
     >>> response = request.send()
 
     Sending the request and getting the response is very simple and can be done
@@ -185,16 +184,15 @@ class SearchAPIRequest(object):
         """Check if the request is valid and can be sent, raise ValueError if 
         not.
         
-        `strict` is a boolean argument that defaults to True which means an 
-        exception is raised on every invalid query parameter, if set to False
-        an exception is raised only when the search request cannot be performed
-        because required query params are missing.
+        :param strict, boolean. If True, an exception is raised on every
+        invalid query parameter, if False an exception is raised only when the search
+        request cannot be performed because required query params are missing.
         
         """
         if not self.api_key:
             raise ValueError('API key is missing')
         if strict and self.minimum_match and (type(self.minimum_match) is not float or
-                                                      self.minimum_match > 1 or self.minimum_match < 0):
+                                              self.minimum_match > 1 or self.minimum_match < 0):
             raise ValueError('minimum_match should be a float between 0 and 1')
         if strict and self.hide_sponsored is not None and type(self.hide_sponsored) is not bool:
             raise ValueError('hide_sponsored should be a boolean')
@@ -203,7 +201,7 @@ class SearchAPIRequest(object):
         if strict and self.show_sources not in ("all", "matching", "false", False, None):
             raise ValueError('show_sources has a wrong value. Should be "matching", "all", or None')
         if strict and self.minimum_probability and (type(self.minimum_probability) is not float or
-                                                            self.minimum_probability > 1 or self.minimum_probability < 0):
+                                                    self.minimum_probability > 1 or self.minimum_probability < 0):
             raise ValueError('minimum_probability should be a float between 0 and 1')
         if not self.person.is_searchable:
             raise ValueError('No valid name/username/phone/email or search pointer in request')
@@ -244,22 +242,19 @@ class SearchAPIRequest(object):
         
         the response is returned as a SearchAPIResponse object.
         
-        `strict_vailidation` is a bool argument that's passed to the 
-        validate_query_params method.
+        :param strict_validation:  bool. Used by self.validate_query_params.
         
-        raises ValueError (raised from validate_query_params), 
+        :raises ValueError (raised from validate_query_params),
         httpError/URLError and SearchAPIError (when the response is returned 
         but contains an error).
         
         example:
-        
         >>> from piplapis.search import SearchAPIRequest, SearchAPIError
         >>> request = SearchAPIRequest('samplekey', email='clark.kent@example.com')
         >>> try:
         ...     response = request.send()
         ... except SearchAPIError as e:
         ...     print e.http_status_code, e
-        
         """
         self.validate_query_params(strict=strict_validation)
 
@@ -284,9 +279,8 @@ class SearchAPIRequest(object):
         use this method if you want to send the request asynchronously so your 
         program can do other things while waiting for the response.
         
-        `callback` is a function (or other callable) with the following 
-        signature:
-        callback(response=None, error=None)
+        :param strict_validation: bool. Used by self.validate_query_params.
+        :param callback: Callable with the following signature - callback(response=None, error=None).
         
         example:
         
@@ -298,7 +292,6 @@ class SearchAPIRequest(object):
         >>> request = SearchAPIRequest('samplekey', email='clark.kent@example.com')
         >>> request.send_async(my_callback)
         >>> do_other_things()
-        
         """
 
         def target():
@@ -355,7 +348,7 @@ class SearchAPIResponse(Serializable):
 
     def __init__(self, query=None, person=None, sources=None,
                  possible_persons=None, warnings_=None, http_status_code=None,
-                 visible_sources=None, available_sources=None, search_id=None):
+                 visible_sources=None, available_sources=None, search_id=None, *args, **kwargs):
         """Args:
         
         query -- A Person object with the query as interpreted by Pipl.
@@ -395,13 +388,12 @@ class SearchAPIResponse(Serializable):
     def group_sources(self, key_function):
         """Return a dict with the sources grouped by the key returned by 
         `key_function`.
-        
-        `key_function` takes a source and returns the value from the source to
+
+        :param key_function: function, takes a source and returns the value from the source to
         group by (see examples in the group_sources_by_* methods below).
-        
-        the return value is a dict, a key in this dict is a key returned by
+
+        :return dict, a key in this dict is a key returned by
         `key_function` and the value is a list of all the sources with this key.
-        
         """
         sorted_sources = sorted(self.sources, key=key_function)
         grouped_sources = itertools.groupby(sorted_sources, key=key_function)
@@ -410,7 +402,7 @@ class SearchAPIResponse(Serializable):
     def group_sources_by_domain(self):
         """Return the sources grouped by the domain they came from.
         
-        the return value is a dict, a key in this dict is a domain
+        :return dict, a key in this dict is a domain
         and the value is a list of all the sources with this domain.
         
         """
@@ -420,7 +412,7 @@ class SearchAPIResponse(Serializable):
     def group_sources_by_category(self):
         """Return the sources grouped by their category. 
         
-        the return value is a dict, a key in this dict is a category
+        :return dict, a key in this dict is a category
         and the value is a list of all the sources with this category.
         
         """
@@ -430,7 +422,7 @@ class SearchAPIResponse(Serializable):
     def group_sources_by_match(self):
         """Return the sources grouped by their match attribute.
 
-        the return value is a dict, a key in this dict is a match
+        :return dict, a key in this dict is a match
         float and the value is a list of all the sources with this
         match value.
 
@@ -438,9 +430,11 @@ class SearchAPIResponse(Serializable):
         key_function = lambda source: source.match
         return self.group_sources(key_function)
 
-    @staticmethod
-    def from_dict(d):
-        """Transform the dict to a response object and return the response."""
+    @classmethod
+    def from_dict(cls, d):
+        """Transform the dict to a response object and return the response.
+        :param d: the API response dictionary
+        """
         http_status_code = d.get('@http_status_code')
         visible_sources = d.get('@visible_sources')
         available_sources = d.get('@available_sources')

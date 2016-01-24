@@ -1,17 +1,17 @@
 from piplapis.data.fields import *
 from piplapis.data.utils import *
 
-
 __all__ = ['Source', 'Person', 'Relationship']
 
 
 class FieldsContainer(object):
-
-    """The base class of Source and Person, made only for inheritance.
+    """The base class of Source, Person and Relationship, made only for inheritance.
     Do not use this class directly.
     """
+    class_container = NotImplemented  # Implement in subclass
+    singular_fields = NotImplemented  # Implement in subclass
 
-    def __init__(self, fields=None):
+    def __init__(self, fields=None, *args, **kwargs):
         """`fields` is an iterable of field objects from
         piplapis.data.fields."""
         self.names = []
@@ -32,12 +32,11 @@ class FieldsContainer(object):
         self.dob = None
         self.gender = None
         self.add_fields(fields or [])
-    
+
     def add_fields(self, fields):
         """Add the fields to their corresponding container.
         
-        `fields` is an iterable of field objects from piplapis.data.fields.
-        
+        :param fields: iterable of field objects from piplapis.data.fields.
         """
         for field in fields:
             cls = field.__class__
@@ -61,7 +60,9 @@ class FieldsContainer(object):
 
     @classmethod
     def fields_from_dict(cls, d):
-        """Load the fields from the dict, return a list with all the fields."""
+        """Load the fields from the dict, return a list with all the fields.
+        :param d: dict, the dictionary to load object from.
+        """
         class_container = cls.class_container
         fields = [field_cls.from_dict(field_dict)
                   for field_cls, container in class_container.iteritems()
@@ -85,7 +86,6 @@ class FieldsContainer(object):
 
 
 class Relationship(Serializable, FieldsContainer):
-
     """Another person related to this person."""
 
     class_container = {
@@ -111,9 +111,9 @@ class Relationship(Serializable, FieldsContainer):
 
     attributes = ('type', 'subtype')
     types_set = set(['friend', 'family', 'work', 'other'])
-    
-    def __init__(self, fields=None, type_=None, subtype=None, 
-                 valid_since=None, inferred=None):
+
+    def __init__(self, fields=None, type_=None, subtype=None,
+                 valid_since=None, inferred=None, *args, **kwargs):
         """`fields` is a list of fields (plapis.data.fields.Field subclasses)
         
         `type_` and `subtype` should both be unicode objects or utf8 encoded 
@@ -129,15 +129,17 @@ class Relationship(Serializable, FieldsContainer):
         crawlers found this data on the page.
         
         """
-        super(Relationship, self).__init__(fields)
+        super(Relationship, self).__init__(fields, *args, **kwargs)
         self.type = type_
         self.subtype = subtype
         self.valid_since = valid_since
         self.inferred = inferred
-    
+
     @classmethod
     def from_dict(cls, d):
-        """Transform the dict to a relationship object and return the relationship."""
+        """Transform the dict to a relationship object and return the relationship.
+        :param d: dict, the dictionary to create a Relationship from.
+        """
         fields = cls.fields_from_dict(d)
         ins = cls(fields=fields)
         if "@type" in d:
@@ -166,11 +168,10 @@ class Relationship(Serializable, FieldsContainer):
 
     def __str__(self):
         return str(self.names[0]) if self.names and len(self.names) > 0 else ""
- 
+
 
 class Source(Serializable, FieldsContainer):
-
-    """A source objects holds the data retrieved from a specific source. 
+    """A source objects holds the data retrieved from a specific source.
 
     Every source object is based on the URL of the 
     page where the data is available, and the data itself that comes as field
@@ -218,7 +219,8 @@ class Source(Serializable, FieldsContainer):
     }
 
     def __init__(self, fields=None, match=None, name=None, category=None, origin_url=None,
-                 sponsored=None, domain=None, source_id=None, person_id=None, premium=None, valid_since=None):
+                 sponsored=None, domain=None, source_id=None, person_id=None, premium=None,
+                 valid_since=None, *args, **kwargs):
         """Extend FieldsContainer.__init__ and set the source's attributes.
 
         Args:
@@ -245,7 +247,7 @@ class Source(Serializable, FieldsContainer):
                        Pipl's crawlers saw this source.
 
         """
-        FieldsContainer.__init__(self, fields)
+        FieldsContainer.__init__(self, fields, *args, **kwargs)
         self.match = match
         self.valid_since = valid_since
         self.name = name
@@ -259,7 +261,9 @@ class Source(Serializable, FieldsContainer):
 
     @classmethod
     def from_dict(cls, d):
-        """Transform the dict to a source object and return the source."""
+        """Transform the dict to a source object and return the source.
+        :param d: dict, the dictionary to create a Source from.
+        """
         match = d.get('@match')
         name = d.get('@name')
         category = d.get('@category')
@@ -302,10 +306,9 @@ class Source(Serializable, FieldsContainer):
             d['@id'] = self.source_id
         d.update(self.fields_to_dict())
         return d
-   
+
 
 class Person(Serializable, FieldsContainer):
-    
     """A Person object is all the data available on an individual.
     
     The Person object is essentially very similar in its structure to the 
@@ -319,10 +322,10 @@ class Person(Serializable, FieldsContainer):
     For example:
  
     >>> from piplapis.data import Person, Email, Phone
-    >>> fields = [Email(address='eric@cartman.com'), Phone(number=999888777)]
+    >>> fields = [Email(address='clark.kent@example.com'), Phone(number=999888777)]
     >>> person = Person(fields=fields)
     >>> person.emails
-    [Email(address=u'eric@cartman.com')]
+    [Email(address=u'clark.kent@example.com')]
     >>> person.phones
     [Phone(number=999888777)]
 
@@ -356,29 +359,29 @@ class Person(Serializable, FieldsContainer):
         DOB: 'dob'
     }
 
-    def __init__(self, fields=None):
+    def __init__(self, fields=None, *args, **kwargs):
         """Extend FieldsContainer.__init__ 
         
         Args:
         fields -- An iterable of fields (from piplapis.data.fields).
         """
-        
-        FieldsContainer.__init__(self, fields)
+
+        FieldsContainer.__init__(self, fields, *args, **kwargs)
         self.person_id = None
         self.search_pointer = None
         self.match = None
-    
+
     @property
     def is_searchable(self):
         """A bool value that indicates whether the person has enough data and
         can be sent as a query to the API."""
         filter_func = lambda field: field.is_searchable
         return bool(self.search_pointer or
-                    filter(filter_func, self.names) or 
+                    filter(filter_func, self.names) or
                     filter(filter_func, self.emails) or
                     filter(filter_func, self.phones) or
                     filter(filter_func, self.usernames))
-    
+
     @property
     def unsearchable_fields(self):
         """A list of all the fields that can't be searched by.
@@ -388,16 +391,18 @@ class Person(Serializable, FieldsContainer):
         
         """
         filter_func = lambda field: not field.is_searchable
-        return filter(filter_func, self.names) + \
-               filter(filter_func, self.emails) + \
-               filter(filter_func, self.phones) + \
-               filter(filter_func, self.usernames) + \
-               filter(filter_func, self.addresses) + \
-               filter(filter_func, [x for x in [self.dob] if x])
+        return (filter(filter_func, self.names) +
+                filter(filter_func, self.emails) +
+                filter(filter_func, self.phones) +
+                filter(filter_func, self.usernames) +
+                filter(filter_func, self.addresses) +
+                filter(filter_func, [x for x in [self.dob] if x]))
 
     @classmethod
     def from_dict(cls, d):
-        """Transform the dict to a person object and return the person."""
+        """Transform the dict to a person object and return the person.
+        :param d: dict, the dictionary to create a Person from.
+        """
         fields = cls.fields_from_dict(d)
         ins = cls(fields=fields)
         if "@id" in d:
@@ -417,6 +422,3 @@ class Person(Serializable, FieldsContainer):
             d['@search_pointer'] = self.search_pointer
         d.update(self.fields_to_dict())
         return d
-
-
-
