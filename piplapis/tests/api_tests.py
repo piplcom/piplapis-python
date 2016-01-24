@@ -1,5 +1,7 @@
 import os
-from piplapis.data import Person, Email, Name, URL, Username, UserID, Image
+from piplapis.data import Person, Email, Name, URL, Username, UserID, Image, Phone, Address, OriginCountry, Language, \
+    DOB, Gender
+from piplapis.data.containers import Relationship
 from piplapis.search import SearchAPIRequest
 from unittest import TestCase
 
@@ -13,7 +15,7 @@ class APITests(TestCase):
 
     def setUp(self):
         SearchAPIRequest.default_api_key = os.getenv("TESTING_KEY")
-        SearchAPIRequest.BASE_URL = os.getenv("API_TESTS_BASE_URL") + "?developer_class=premium"
+        SearchAPIRequest.BASE_URL = os.getenv("API_TESTS_BASE_URL") + "?developer_class=business_premium"
 
     def get_broad_search_request(self):
         return SearchAPIRequest(first_name="brian", last_name="perks")
@@ -95,12 +97,26 @@ class APITests(TestCase):
     def test_make_sure_md5_search_works(self):
         self.assertIsNotNone(self.get_narrow_md5_search_request().send().person)
 
+    def test_contact_datatypes_are_as_expected(self):
+        SearchAPIRequest.BASE_URL = os.getenv("API_TESTS_BASE_URL") + "?developer_class=contact"
+        response = self.get_narrow_search_request().send()
+        available_data_types = {Name, Gender, DOB, Language, OriginCountry, Address, Phone}
+        for field in response.person.all_fields:
+            if type(field) == Email:
+                self.assertEqual(field.address, 'full.email.available@business.subscription')
+            else:
+                self.assertIn(type(field), available_data_types)
+
     def test_social_datatypes_are_as_expected(self):
         SearchAPIRequest.BASE_URL = os.getenv("API_TESTS_BASE_URL") + "?developer_class=social"
         response = self.get_narrow_search_request().send()
-        available_data_types = {Name, URL, Email, Username, UserID, Image}
+        available_data_types = {Name, Gender, DOB, Language, OriginCountry, Address, Phone, Username, UserID, Image,
+                                Relationship, URL}
         for field in response.person.all_fields:
-            self.assertIn(type(field), available_data_types)
+            if type(field) == Email:
+                self.assertEqual(field.address, 'full.email.available@business.subscription')
+            else:
+                self.assertIn(type(field), available_data_types)
 
     def test_make_sure_insufficient_search_isnt_sent(self):
         request = SearchAPIRequest(first_name="brian")
