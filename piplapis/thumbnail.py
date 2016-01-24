@@ -1,28 +1,21 @@
-"""Python wrapper for Pipl's Thumbnail API.
-
-Pipl's thumbnail API provides a thumbnailing service for presenting images in 
-your application. The images can be from the results you got from our Search
-API but it can also be any web URI of an image.
-
-The thumbnails returned by the API are in the height/width defined in the 
-request. Additional features of the API are:
-- Detect and Zoom-in on human faces (in case there's a human face in the image).
-- Optionally adding to the thumbnail the favicon of the website where the image 
-  is from (for attribution, recommended for copyright reasons).
-
-This module contains only one function - generate_thumbnail_url() that can be 
-used for transforming an image URL into a thumbnail API URL.
-
 """
+This module contains wrapper code to the DEPRECATED paid thumbnail API v2.
+Please use Image.get_thumbnail_url instead, as it uses the newer, complementary thumbnail service.
+"""
+import logging
 import urllib
 
 from piplapis.data import Image
 from piplapis.data.utils import to_utf8
 
 
+logging.warn("The thumbnail API in piplapis.thumbnail is depracated.")
+
+
 BASE_URL = 'http://api.pipl.com/thumbnail/v2/?'
 # HTTPS is also supported:
 #BASE_URL = 'https://api.pipl.com/thumbnail/v2/?'
+
 
 MAX_PIXELS = 500
 
