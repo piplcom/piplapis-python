@@ -370,6 +370,7 @@ class Person(Serializable, FieldsContainer):
         self.person_id = None
         self.search_pointer = None
         self.match = None
+        self.inferred = None
 
     @property
     def is_searchable(self):
@@ -411,6 +412,8 @@ class Person(Serializable, FieldsContainer):
             ins.search_pointer = d['@search_pointer']
         if "@match" in d:
             ins.match = d['@match']
+        if "@inferred" in d:
+            ins.inferred = d['@inferred']
         return ins
 
     def to_dict(self):
@@ -420,5 +423,9 @@ class Person(Serializable, FieldsContainer):
             d['@id'] = self.person_id
         if self.search_pointer is not None:
             d['@search_pointer'] = self.search_pointer
+        if self.match is not None:
+            d['@match'] = self.match
+        if self.inferred is not None:
+            d['@inferred'] = self.search_pointer
         d.update(self.fields_to_dict())
         return d

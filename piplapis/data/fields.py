@@ -11,12 +11,23 @@ class Field(Serializable):
     """Base class of all data fields, made only for inheritance."""
 
     attributes = ()
+    base_attributes = ('valid_since', 'inferred', 'last_seen', 'current')
     children = ('content',)
     types_set = set([])
 
-    def __init__(self, valid_since=None, inferred=None, *args, **kwargs):
+    def __init__(self, valid_since=None, inferred=None, last_seen=None, current=None, *args, **kwargs):
+        """
+        Constructor for a basic Field object. This should never be called directly.
+        :param valid_since: date, the date in which this field first appeared to Pipl's crawlers.
+        :param inferred: bool, whether this field is inferred.
+        :param last_seen: date, the date in which this field was last seen by Pipl's crawlers.
+        :param current: bool, whether this is valid at this moment in time (when the query was executed)
+        :return:
+        """
         self.valid_since = valid_since
         self.inferred = inferred
+        self.last_seen = last_seen
+        self.current = current
 
     def __setattr__(self, attr, value):
         """Extend the default object.__setattr___ and make sure that str values 
@@ -60,8 +71,7 @@ class Field(Serializable):
 
     def __repr__(self):
         """Return a representation of the object (a valid value for eval())."""
-        attrs = list(self.attributes + self.children)
-        attrs.append('valid_since')
+        attrs = list(self.base_attributes + self.attributes + self.children)
         attrs_values = [(attr, getattr(self, attr)) for attr in attrs if not attr.startswith("display")]
         attrs_values = [(attr, value) if attr != 'type' else ('type_', value)
                         for attr, value in attrs_values]
@@ -99,22 +109,25 @@ class Field(Serializable):
                 key = 'type_'
             elif key == 'valid_since':
                 val = str_to_datetime(val)
+            elif key == 'last_seen':
+                val = str_to_datetime(val)
             elif key == 'date_range':
                 val = DateRange.from_dict(val)
             kwargs[key.encode('ascii')] = val
-
         return cls(**kwargs)
 
     def to_dict(self):
         """Return a dict representation of the field."""
         d = {}
-        if self.valid_since is not None:
-            d['@valid_since'] = datetime_to_str(self.valid_since)
-        for attr_list, prefix in [(self.attributes, '@'), (self.children, '')]:
+        for attr_list, prefix in [(self.base_attributes, '@'), (self.attributes, '@'), (self.children, '')]:
             for attr in attr_list:
                 value = getattr(self, attr)
                 if isinstance(value, Serializable):
                     value = value.to_dict()
+                if isinstance(value, datetime.date):
+                    value = date_to_str(value)
+                if isinstance(value, datetime.datetime):
+                    value = datetime_to_str(value)
                 if value or isinstance(value, (bool, int, long)):
                     d[prefix + attr] = value
         if hasattr(self, 'display') and self.display:
@@ -172,8 +185,6 @@ class Ethnicity(Field):
             'korean', 'viatnamese', 'native_hawaiian', 'guamanian',
             'chamorro', 'samoan', 'other_pacific_islander', 'other'.
 
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
         """
         Field.__init__(self, *args, **kwargs)
         self.content = content.lower()
@@ -204,10 +215,7 @@ class Name(Field):
         an unparsed name.
         
         `type_` is one of Name.types_set.
-        
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
-        
+
         """
         Field.__init__(self, *args, **kwargs)
         self.prefix = prefix
@@ -256,10 +264,7 @@ class Address(Field):
         an unparsed address.
         
         `type_` is one of Address.types_set.
-        
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
-        
+
         """
         Field.__init__(self, *args, **kwargs)
         self.country = country
@@ -337,10 +342,7 @@ class Phone(Field):
         
         `type_` is one of Phone.types_set.
         `raw` is a raw phone number string
-        
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
-        
+
         """
         Field.__init__(self, *args, **kwargs)
         self.country_code = country_code
@@ -389,10 +391,7 @@ class Email(Field):
         is provided by a public email provider (such as gmail, outlook.com, etc).
 
         `type_` is one of Email.types_set.
-        
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
-        
+
         """
         Field.__init__(self, *args, **kwargs)
         self.address = address
@@ -463,10 +462,7 @@ class Job(Field):
         
         `date_range` is A DateRange object (piplapis.data.fields.DateRange), 
         that's the time the person held this job.
-        
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
-        
+
         """
         Field.__init__(self, *args, **kwargs)
         self.title = title
@@ -488,10 +484,7 @@ class Education(Field):
         
         `date_range` is A DateRange object (piplapis.data.fields.DateRange), 
         that's the time the person was studying.
-        
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
-        
+
         """
         Field.__init__(self, *args, **kwargs)
         self.degree = degree
@@ -511,9 +504,6 @@ class Image(Field):
         
         `thumbnail_token` is used to create the URL for Pipl's thumbnail service.
 
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
-        
         """
         Field.__init__(self, *args, **kwargs)
         self.url = url
@@ -551,10 +541,7 @@ class OriginCountry(Field):
         """`country` is the country itself, it should be a unicode object or 
         a utf8 encoded str (will be decoded automatically). Possible values are 
         two-letter country codes.
-        
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
-        
+
         """
         Field.__init__(self, *args, **kwargs)
         self.country = country
@@ -573,10 +560,7 @@ class Language(Field):
     def __init__(self, language=None, region=None, display=None, *args, **kwargs):
         """`language` and `region` should be unicode objects 
         or utf8 encoded strs (will be decoded automatically).
-        
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
-        
+
         """
         Field.__init__(self, *args, **kwargs)
         self.language = language
@@ -596,10 +580,7 @@ class Username(Field):
     def __init__(self, content=None, *args, **kwargs):
         """`content` is the username itself, it should be a unicode object or 
         a utf8 encoded str (will be decoded automatically).
-        
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
-        
+
         """
         Field.__init__(self, *args, **kwargs)
         self.content = content
@@ -626,10 +607,7 @@ class UserID(Field):
     def __init__(self, content=None, *args, **kwargs):
         """`content` is the ID itself, it should be a unicode object or a utf8 
         encoded str (will be decoded automatically).
-        
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
-        
+
         """
         Field.__init__(self, *args, **kwargs)
         self.content = content
@@ -651,10 +629,7 @@ class DOB(Field):
     def __init__(self, date_range=None, display=None, *args, **kwargs):
         """`date_range` is A DateRange object (piplapis.data.fields.DateRange), 
         the date-of-birth is within this range.
-        
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
-        
+
         """
         Field.__init__(self, *args, **kwargs)
         self.date_range = date_range
@@ -782,9 +757,7 @@ class URL(Field):
         objects or utf8 encoded strs (will be decoded automatically).
         
         `sponsored` is a boolean - whether the URL is sponsored or not
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
-        
+
         """
         Field.__init__(self, *args, **kwargs)
         self.url = url
@@ -819,9 +792,6 @@ class Tag(Field):
         """`content` is the tag itself, both `content` and `classification`
         should be unicode objects or utf8 encoded strs (will be decoded
         automatically).
-
-        `valid_since` is a datetime.datetime object, it's the first time Pipl's
-        crawlers found this data on the page.
 
         """
         Field.__init__(self, *args, **kwargs)
