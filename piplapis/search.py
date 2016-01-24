@@ -59,9 +59,10 @@ class SearchAPIRequest(object):
     
     You can also set various request flags:
     minimum_probability - a float between 0 and 1, to define what statistical confidence you need for inferred data.
-    show_sources - string, either "all", "matching". If not set, no sources will be shown.
+    show_sources - string, either "all", "matching" or True. If not set, no sources will be shown.
         "all" - all sources will be shown.
         "matching" - only sources belonging to a matching person will be shown.
+        Boolean True will behave like "matching".
     hide_sponsored - boolean (default False), whether to hide sponsored results.
     minimum_match - a float between 0 and 1, to define the minimum match under which possible persons will not be returned.
     that may be the person you're looking for)
@@ -138,8 +139,8 @@ class SearchAPIRequest(object):
         search_pointer -- str, sending a search pointer of a possible person will retrieve 
                           more data related to this person.
         minimum_probability -- float (0-1). The minimum required confidence for inferred data.
-        show_sources -- str, one of "matching"/"all". "all" will show all sources, "matching"
-                        only those of the matching person. If not set, no sources will be shown.
+        show_sources -- str or bool, one of "matching"/"all". "all" will show all sources, "matching"
+                        only those of the matching person. Boolean True will behave like "matching".
         minimum_match -- float (0-1). The minimum required match under which possible persons will not be returned.
         live_feeds -- bool, default True. Whether to use live feeds. Only relevant in plans that include
                       live feeds. Can be set to False for performance.
