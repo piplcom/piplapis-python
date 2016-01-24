@@ -1,3 +1,4 @@
+import logging
 from urllib import urlencode
 
 from piplapis.data.utils import *
@@ -5,6 +6,8 @@ from piplapis.data.utils import *
 __all__ = ['Name', 'Address', 'Phone', 'Email', 'Job', 'Education', 'Image',
            'Username', 'UserID', 'DOB', 'URL', 'Tag',
            'DateRange', 'Ethnicity', 'Language', 'OriginCountry', 'Gender']
+
+logger = logging.getLogger(__name__)
 
 
 class Field(Serializable):
@@ -51,7 +54,11 @@ class Field(Serializable):
             except UnicodeDecodeError:
                 raise ValueError('Tried to assign a non utf8 string to ' + attr)
         if attr == 'type':
-            self.validate_type(value)
+            try:
+                self.validate_type(value)
+            except ValueError:
+                logger.warn("{} is not a valid type of {}. Setting to None.".format(value, type(self)))
+                value = None
         object.__setattr__(self, attr, value)
 
     def __unicode__(self):
@@ -163,7 +170,8 @@ class Gender(Field):
     @content.setter
     def content(self, value):
         if value.lower() not in self.genders:
-            raise ValueError("Gender unknown")
+            logger.warn("{} is not a valid gender type. Setting to None.".format(value))
+            value = None
         self._content = value
 
 

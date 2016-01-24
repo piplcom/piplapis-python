@@ -9,7 +9,8 @@ from piplapis.data import Image
 from piplapis.data.utils import to_utf8
 
 
-logging.warn("The thumbnail API in piplapis.thumbnail is depracated.")
+logger = logging.getLogger(__name__)
+logger.warning("The thumbnail API in piplapis.thumbnail is depracated.")
 
 
 BASE_URL = 'http://api.pipl.com/thumbnail/v2/?'
