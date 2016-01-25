@@ -524,15 +524,25 @@ class Image(Field):
 
     def get_thumbnail_url(self, width=100, height=100, zoom_face=True, favicon=True, use_https=False):
         if self.thumbnail_token:
-            params = {
-                "height": height,
-                "width": width,
-                "favicon": favicon,
-                "zoom_face": zoom_face,
-            }
-            thumb_url_base = "{}://thumb.pipl.com/image?token={}&".format("https" if use_https else "http",
-                                                                          self.thumbnail_token)
-            return thumb_url_base + urlencode(params)
+            return self.generate_redundant_thumbnail_url([self], width=width, height=height, zoom_face=zoom_face,
+                                                         favicon=favicon, use_https=use_https)
+
+    @classmethod
+    def generate_redundant_thumbnail_url(cls, images, width=100, height=100, zoom_face=True,
+                                         favicon=True, use_https=False):
+        thumb_url_base = "{}://thumb.pipl.com/image?".format("https" if use_https else "http")
+        params = {
+            "height": height,
+            "width": width,
+            "favicon": favicon,
+            "zoom_face": zoom_face,
+        }
+        image_tokens = [x.thumbnail_token for x in images if x.thumbnail_token]
+        if len(image_tokens) == 0:
+            raise ValueError("You can only generate thumbnail URLs for image objects with a thumbnail token.")
+
+        params['tokens'] = ",".join(image_tokens)
+        return thumb_url_base + urlencode(params)
 
     @property
     def display(self):
