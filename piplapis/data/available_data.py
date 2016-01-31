@@ -32,7 +32,7 @@ class AvailableData(Serializable):
 class FieldCount(Serializable):
     children = ('addresses', 'ethnicities', 'emails', 'dobs', 'genders', 'user_ids', 'social_profiles',
                 'educations', 'jobs', 'images', 'languages', 'origin_countries', 'names', 'phones',
-                'relationships', 'usernames', 'tags')
+                'relationships', 'usernames')
 
     def __init__(self, addresses=None, ethnicities=None, emails=None, dobs=None,
                  genders=None, user_ids=None, social_profiles=None, educations=None, jobs=None, images=None,
