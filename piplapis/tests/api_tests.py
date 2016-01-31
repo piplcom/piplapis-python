@@ -1,3 +1,5 @@
+import json
+import logging
 import os
 from piplapis.data import Person, Email, Name, URL, Username, UserID, Image, Phone, Address, OriginCountry, Language, \
     DOB, Gender
@@ -10,6 +12,10 @@ from unittest import TestCase
 # These tests expect two environment variables to be set:
 # TESTING_KEY: the API key to use
 # API_TESTS_BASE_URL: the base URL on which to execute requests
+
+handler = logging.StreamHandler()
+logging.getLogger('piplapis').addHandler(handler)
+
 
 class APITests(TestCase):
 
@@ -118,6 +124,12 @@ class APITests(TestCase):
             else:
                 self.assertIn(type(field), available_data_types)
 
+    def test_forward_compatibility(self):
+        SearchAPIRequest.BASE_URL += "&show_unknown_fields=1"
+        request = SearchAPIRequest(email="clark.kent@example.com")
+        response = request.send()
+        self.assertIsNotNone(response.person)
+
     def test_make_sure_insufficient_search_isnt_sent(self):
         request = SearchAPIRequest(first_name="brian")
         try:
@@ -126,3 +138,37 @@ class APITests(TestCase):
         except Exception as e:
             failed = True
         self.assertTrue(failed)
+
+    def test_make_sure_field_count_is_correct_on_premium(self):
+        res = self.get_narrow_search_request().send()
+        self.assertEqual(res.available_data.premium.relationships, 8)
+        self.assertEqual(res.available_data.premium.usernames, 2)
+        self.assertEqual(res.available_data.premium.jobs, 13)
+        self.assertEqual(res.available_data.premium.addresses, 9)
+        self.assertEqual(res.available_data.premium.phones, 4)
+        self.assertEqual(res.available_data.premium.emails, 4)
+        self.assertEqual(res.available_data.premium.languages, 1)
+        self.assertEqual(res.available_data.premium.names, 1)
+        self.assertEqual(res.available_data.premium.dobs, 1)
+        self.assertEqual(res.available_data.premium.images, 2)
+        self.assertEqual(res.available_data.premium.genders, 1)
+        self.assertEqual(res.available_data.premium.educations, 2)
+        self.assertEqual(res.available_data.premium.social_profiles, 5)
+
+    def test_make_sure_field_count_is_correct_on_basic(self):
+        SearchAPIRequest.BASE_URL = os.getenv("API_TESTS_BASE_URL") + "?developer_class=social"
+        res = self.get_narrow_search_request().send()
+        self.assertEqual(res.available_data.basic.relationships, 7)
+        self.assertEqual(res.available_data.basic.usernames, 2)
+        self.assertEqual(res.available_data.basic.jobs, 12)
+        self.assertEqual(res.available_data.basic.addresses, 6)
+        self.assertEqual(res.available_data.basic.phones, 1)
+        self.assertEqual(res.available_data.basic.emails, 3)
+        self.assertEqual(res.available_data.basic.user_ids, 4)
+        self.assertEqual(res.available_data.basic.languages, 1)
+        self.assertEqual(res.available_data.basic.names, 1)
+        self.assertEqual(res.available_data.basic.dobs, 1)
+        self.assertEqual(res.available_data.basic.images, 2)
+        self.assertEqual(res.available_data.basic.genders, 1)
+        self.assertEqual(res.available_data.basic.educations, 2)
+        self.assertEqual(res.available_data.basic.social_profiles, 3)
