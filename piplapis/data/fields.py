@@ -523,26 +523,51 @@ class Image(Field):
         return bool(self.url and is_valid_url(self.url))
 
     def get_thumbnail_url(self, width=100, height=100, zoom_face=True, favicon=True, use_https=False):
+        """
+        This method creates a thumbnail URL for this image.
+
+        :param width: int - the desired thumbnail width
+        :param height: int - the desired thumbnail height
+        :param zoom_face: bool - whether to enable face detection
+        :param favicon: bool - whether to show favicon (if available)
+        :param use_https: bool - whether the resulting url should be HTTPS.
+        :return: str, the thumbnail URL
+        """
         if self.thumbnail_token:
-            return self.generate_redundant_thumbnail_url([self], width=width, height=height, zoom_face=zoom_face,
+            return self.generate_redundant_thumbnail_url(self, None, width=width, height=height, zoom_face=zoom_face,
                                                          favicon=favicon, use_https=use_https)
 
     @classmethod
-    def generate_redundant_thumbnail_url(cls, images, width=100, height=100, zoom_face=True,
+    def generate_redundant_thumbnail_url(cls, first_image, second_image, width=100, height=100, zoom_face=True,
                                          favicon=True, use_https=False):
-        thumb_url_base = "{}://thumb.pipl.com/image?".format("https" if use_https else "http")
-        params = {
-            "height": height,
-            "width": width,
-            "favicon": favicon,
-            "zoom_face": zoom_face,
-        }
-        image_tokens = [x.thumbnail_token for x in images if x.thumbnail_token]
-        if len(image_tokens) == 0:
+        """
+        This method creates a thumbnail URL with redundancy - if the first image is unavailable, the second will be used.
+
+        :param first_image: Image, The first choice. If available, the URL will link to this image.
+        :param second_image: Image, The backup choice.
+        :param width: int - the desired thumbnail width
+        :param height: int - the desired thumbnail height
+        :param zoom_face: bool - whether to enable face detection
+        :param favicon: bool - whether to show favicon (if available)
+        :param use_https: bool - whether the resulting url should be HTTPS.
+        :return: str, the thumbnail URL
+        """
+
+        if first_image is None and second_image is None:
+            raise ValueError("Please provide at least one image.")
+
+        images_with_tokens = [x for x in (first_image, second_image) if x and x.thumbnail_token]
+        if len(images_with_tokens) == 0:
             raise ValueError("You can only generate thumbnail URLs for image objects with a thumbnail token.")
 
-        params['tokens'] = ",".join(image_tokens)
-        return thumb_url_base + urlencode(params)
+        if len(images_with_tokens) == 1:
+            tokens = images_with_tokens[0].thumbnail_token
+        else:
+            tokens = ",".join([re.sub("&dsid=\d+", "", x.thumbnail_token) for x in images_with_tokens])
+
+        thumb_url_base = "{}://thumb.pipl.com/image?".format("https" if use_https else "http")
+        params = {"height": height, "width": width, "favicon": favicon, "zoom_face": zoom_face}
+        return thumb_url_base + urlencode(params) + "&tokens=" + tokens
 
     @property
     def display(self):
