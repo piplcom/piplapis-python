@@ -203,25 +203,26 @@ class SearchAPIRequest(object):
         """
         if not self.api_key:
             raise ValueError('API key is missing')
-        if strict and self.minimum_match and (type(self.minimum_match) is not float or
-                                              self.minimum_match > 1 or self.minimum_match < 0):
-            raise ValueError('minimum_match should be a float between 0 and 1')
-        if strict and self.hide_sponsored is not None and type(self.hide_sponsored) is not bool:
-            raise ValueError('hide_sponsored should be a boolean')
-        if strict and self.live_feeds is not None and type(self.live_feeds) is not bool:
-            raise ValueError('live_feeds should be a boolean')
-        if strict and self.match_requirements is not None and not isinstance(self.match_requirements, basestring):
-            raise ValueError('match_requirements should be an str or unicode object')
-        if strict and self.show_sources not in ("all", "matching", "false", "true", True, False, None):
-            raise ValueError('show_sources has a wrong value. Should be "matching", "all", True, False or None')
-        if strict and self.minimum_probability and (type(self.minimum_probability) is not float or
-                                                    self.minimum_probability > 1 or self.minimum_probability < 0):
-            raise ValueError('minimum_probability should be a float between 0 and 1')
+        if strict:
+            if self.minimum_match and (type(self.minimum_match) is not float or
+                                       self.minimum_match > 1 or self.minimum_match < 0):
+                raise ValueError('minimum_match should be a float between 0 and 1')
+            if self.hide_sponsored is not None and type(self.hide_sponsored) is not bool:
+                raise ValueError('hide_sponsored should be a boolean')
+            if self.live_feeds is not None and type(self.live_feeds) is not bool:
+                raise ValueError('live_feeds should be a boolean')
+            if self.match_requirements is not None and not isinstance(self.match_requirements, basestring):
+                raise ValueError('match_requirements should be an str or unicode object')
+            if self.show_sources not in ("all", "matching", "false", "true", True, False, None):
+                raise ValueError('show_sources has a wrong value. Should be "matching", "all", True, False or None')
+            if self.minimum_probability and (type(self.minimum_probability) is not float or
+                                             self.minimum_probability > 1 or self.minimum_probability < 0):
+                raise ValueError('minimum_probability should be a float between 0 and 1')
+            if self.person.unsearchable_fields:
+                raise ValueError('Some fields are unsearchable: %s'
+                                 % self.person.unsearchable_fields)
         if not self.person.is_searchable:
             raise ValueError('No valid name/username/phone/email or search pointer in request')
-        if strict and self.person.unsearchable_fields:
-            raise ValueError('Some fields are unsearchable: %s'
-                             % self.person.unsearchable_fields)
 
     @property
     def url(self):
