@@ -37,7 +37,7 @@ class FieldCount(Serializable):
     def __init__(self, addresses=None, ethnicities=None, emails=None, dobs=None,
                  genders=None, user_ids=None, social_profiles=None, educations=None, jobs=None, images=None,
                  languages=None, origin_countries=None, names=None, phones=None, relationships=None,
-                 usernames=None, tags=None, *args, **kwargs):
+                 usernames=None, *args, **kwargs):
         """
         A summary of the data within an API response
         :param addresses: int, the number of addresses
@@ -56,7 +56,6 @@ class FieldCount(Serializable):
         :param phones: int, the number of phones
         :param relationships: int, the number of relationships
         :param usernames: int, the number of usernames
-        :param tags: int, the number of tags
         """
 
         self.dobs = dobs
@@ -65,7 +64,6 @@ class FieldCount(Serializable):
         self.addresses = addresses
         self.jobs = jobs
         self.genders = genders
-        self.tags = tags
         self.ethnicities = ethnicities
         self.phones = phones
         self.origin_countries = origin_countries
