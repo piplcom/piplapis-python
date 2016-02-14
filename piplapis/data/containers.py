@@ -380,6 +380,7 @@ class Person(Serializable, FieldsContainer):
         return bool(self.search_pointer or
                     filter(filter_func, self.names) or
                     filter(filter_func, self.urls) or
+                    filter(lambda x: x.is_sole_searchable, self.addresses) or
                     filter(filter_func, self.user_ids) or
                     filter(filter_func, self.emails) or
                     filter(filter_func, self.phones) or

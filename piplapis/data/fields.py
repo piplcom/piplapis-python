@@ -289,6 +289,10 @@ class Address(Field):
         self._display = display
 
     @property
+    def is_sole_searchable(self):
+        return bool(self.raw or (self.city and self.street and self.house))
+
+    @property
     def is_searchable(self):
         """A bool value that indicates whether the address is a valid address
         to search by."""
@@ -826,8 +830,7 @@ class URL(Field):
 
     @property
     def is_searchable(self):
-        parts = urlparse.urlsplit(self.url)
-        return bool(parts.scheme or parts.netloc)
+        return bool(self.url)
 
 
 class Tag(Field):
