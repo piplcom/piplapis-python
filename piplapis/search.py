@@ -222,7 +222,7 @@ class SearchAPIRequest(object):
                 raise ValueError('Some fields are unsearchable: %s'
                                  % self.person.unsearchable_fields)
         if not self.person.is_searchable:
-            raise ValueError('No valid name/username/phone/email or search pointer in request')
+            raise ValueError('No valid name/username/user_id/phone/email or search pointer in request')
 
     @property
     def url(self):

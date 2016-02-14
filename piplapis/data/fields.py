@@ -1,4 +1,5 @@
 import logging
+import urlparse
 from urllib import urlencode
 
 from piplapis.data.utils import *
@@ -659,6 +660,10 @@ class UserID(Field):
     def display(self):
         return self.content
 
+    @property
+    def is_searchable(self):
+        return self.content is not None and "@" in self.content
+
 
 class DOB(Field):
     """Date-of-birth of A person.
@@ -818,6 +823,11 @@ class URL(Field):
     @property
     def display(self):
         return self.url or self.name
+
+    @property
+    def is_searchable(self):
+        parts = urlparse.urlsplit(self.url)
+        return bool(parts.scheme or parts.netloc)
 
 
 class Tag(Field):

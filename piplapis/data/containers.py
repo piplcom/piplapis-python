@@ -379,6 +379,8 @@ class Person(Serializable, FieldsContainer):
         filter_func = lambda field: field.is_searchable
         return bool(self.search_pointer or
                     filter(filter_func, self.names) or
+                    filter(filter_func, self.urls) or
+                    filter(filter_func, self.user_ids) or
                     filter(filter_func, self.emails) or
                     filter(filter_func, self.phones) or
                     filter(filter_func, self.usernames))
@@ -396,6 +398,8 @@ class Person(Serializable, FieldsContainer):
                 filter(filter_func, self.emails) +
                 filter(filter_func, self.phones) +
                 filter(filter_func, self.usernames) +
+                filter(filter_func, self.user_ids) +
+                filter(filter_func, self.urls) +
                 filter(filter_func, self.addresses) +
                 filter(filter_func, [x for x in [self.dob] if x]))
 
