@@ -666,7 +666,7 @@ class UserID(Field):
 
     @property
     def is_searchable(self):
-        return self.content is not None and "@" in self.content
+        return self.content is not None and "@" in self.content and self.content.split("@")[0].strip() > 0
 
 
 class DOB(Field):
