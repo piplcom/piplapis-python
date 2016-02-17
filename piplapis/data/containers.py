@@ -431,6 +431,6 @@ class Person(Serializable, FieldsContainer):
         if self.match is not None:
             d['@match'] = self.match
         if self.inferred is not None:
-            d['@inferred'] = self.search_pointer
+            d['@inferred'] = self.inferred
         d.update(self.fields_to_dict())
         return d
