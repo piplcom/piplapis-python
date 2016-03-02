@@ -88,7 +88,7 @@ class SearchAPIRequest(object):
     @classmethod
     def set_default_settings(cls, api_key=None, minimum_probability=None, show_sources=None,
                              minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=False,
-                             match_requirements=None):
+                             match_requirements=None, source_category_requirements=None):
         cls.default_api_key = api_key
         cls.default_minimum_probability = minimum_probability
         cls.default_show_sources = show_sources
@@ -97,6 +97,7 @@ class SearchAPIRequest(object):
         cls.default_live_feeds = live_feeds
         cls.default_use_https = use_https
         cls.default_match_requirements = match_requirements
+        cls.default_source_category_requirements = source_category_requirements
 
     def __init__(self, api_key=None, first_name=None, middle_name=None,
                  last_name=None, raw_name=None, email=None, phone=None, country_code=None,
@@ -104,7 +105,7 @@ class SearchAPIRequest(object):
                  raw_address=None, from_age=None, to_age=None, person=None,
                  search_pointer=None, minimum_probability=None, show_sources=None,
                  minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=None, 
-                 match_requirements=None):
+                 match_requirements=None, source_category_requirements=None):
         """Initiate a new request object with given query params.
         
         Each request must have at least one searchable parameter, meaning 
@@ -154,6 +155,9 @@ class SearchAPIRequest(object):
         :param match_requirements: str/unicode, a match requirements criteria. This criteria defines what fields
                                    must be present in an API response in order for it to be returned as a match.
                                    For example: "email" or "email or phone", or "email or (phone and name)"
+        :param source_category_requirements: str/unicode, a source category requirements criteria. This criteria defines
+                                   what source categories must be present in an API response in order for it to be
+                                   returned as a match. For example: "personal_profiles" or "personal_profiles or professional_and_business"
 
         Each of the arguments that should have a unicode value accepts both
         unicode objects and utf8 encoded str (will be decoded automatically).
@@ -190,6 +194,7 @@ class SearchAPIRequest(object):
         self.minimum_probability = minimum_probability or self.default_minimum_probability
         self.hide_sponsored = hide_sponsored or self.default_hide_sponsored
         self.match_requirements = match_requirements or self.default_match_requirements
+        self.source_category_requirements = source_category_requirements or self.default_source_category_requirements
         self.use_https = use_https
 
     def validate_query_params(self, strict=True):
@@ -244,6 +249,8 @@ class SearchAPIRequest(object):
             query['hide_sponsored'] = self.hide_sponsored
         if self.match_requirements is not None:
             query['match_requirements'] = self.match_requirements
+        if self.source_category_requirements is not None:
+            query['source_category_requirements'] = self.source_category_requirements
         if self.live_feeds is not None:
             query['live_feeds'] = self.live_feeds
         if self.show_sources is not None:
@@ -374,7 +381,7 @@ class SearchAPIResponse(Serializable):
     def __init__(self, query=None, person=None, sources=None,
                  possible_persons=None, warnings_=None, http_status_code=None,
                  visible_sources=None, available_sources=None, search_id=None,
-                 match_requirements=None, available_data=None, *args, **kwargs):
+                 match_requirements=None, available_data=None, source_category_requirements=None, *args, **kwargs):
         """
         :param query: A Person object with the query as interpreted by Pipl.
         :param person: A Person object with data about the person in the query.
@@ -388,6 +395,9 @@ class SearchAPIResponse(Serializable):
         :param available_sources: int, the total number of known sources for this search
         :param search_id: str or unicode, a unique ID which identifies this search. Useful for debugging.
         :param available_data: an AvailableData object, showing the data available for your query.
+        :param match_requirements: str or unicode. Shows how Pipl interpreted your match_requirements criteria.
+        :param source_category_requirements: str or unicode. Shows how Pipl interpreted your
+                                             source_category_requirements criteria.
         """
         self.query = query
         self.person = person
@@ -400,6 +410,7 @@ class SearchAPIResponse(Serializable):
         self.search_id = search_id
         self.available_data = available_data
         self.match_requirements = match_requirements
+        self.source_category_requirements = source_category_requirements
         self.available_data = available_data
 
     @property
@@ -469,6 +480,7 @@ class SearchAPIResponse(Serializable):
         search_id = d.get('@search_id')
 
         match_requirements = d.get('match_requirements')
+        source_category_requirements = d.get('source_category_requirements')
 
         available_data = d.get('available_data') or None
         if available_data is not None:
@@ -490,7 +502,8 @@ class SearchAPIResponse(Serializable):
                                  warnings_=warnings_, http_status_code=http_status_code,
                                  visible_sources=visible_sources, available_sources=available_sources,
                                  search_id=search_id, match_requirements=match_requirements,
-                                 available_data=available_data)
+                                 available_data=available_data,
+                                 source_category_requirements=source_category_requirements)
 
     def to_dict(self):
         """Return a dict representation of the response."""
