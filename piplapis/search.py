@@ -84,6 +84,7 @@ class SearchAPIRequest(object):
     default_hide_sponsored = None
     default_live_feeds = None
     default_match_requirements = None
+    default_source_category_requirements = None
 
     @classmethod
     def set_default_settings(cls, api_key=None, minimum_probability=None, show_sources=None,
