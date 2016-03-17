@@ -219,6 +219,9 @@ class SearchAPIRequest(object):
                 raise ValueError('live_feeds should be a boolean')
             if self.match_requirements is not None and not isinstance(self.match_requirements, basestring):
                 raise ValueError('match_requirements should be an str or unicode object')
+            if self.source_category_requirements is not None and not isinstance(self.source_category_requirements,
+                                                                                basestring):
+                raise ValueError('source_category_requirements should be an str or unicode object')
             if self.show_sources not in ("all", "matching", "false", "true", True, False, None):
                 raise ValueError('show_sources has a wrong value. Should be "matching", "all", True, False or None')
             if self.minimum_probability and (type(self.minimum_probability) is not float or
