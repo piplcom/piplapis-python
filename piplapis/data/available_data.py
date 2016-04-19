@@ -86,7 +86,7 @@ class FieldCount(Serializable):
     @classmethod
     def from_dict(cls, d):
         kwargs = {}
-        for key, value in d.iteritems():
+        for key, value in d.items():
             if key in cls.children and type(value) == int:
                 kwargs[key] = value
         return cls(**kwargs)

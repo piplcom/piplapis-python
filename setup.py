@@ -35,6 +35,7 @@ distutils.core.setup(name='piplapis-python',
                          "Operating System :: OS Independent",
                          "Programming Language :: Python",
                          "Programming Language :: Python :: 2",
+                         "Programming Language :: Python :: 3"
                      ],
                      packages=['piplapis', 'piplapis.data'],
                      )

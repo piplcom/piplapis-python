@@ -1,8 +1,17 @@
 import logging
-import urlparse
-from urllib import urlencode
+import six
 
 from piplapis.data.utils import *
+
+try:
+    import urlparse
+    from urllib import urlencode
+except ImportError:
+    from urllib.parse import urlparse
+    from urllib.parse import urlencode
+
+from builtins import int
+
 
 __all__ = ['Name', 'Address', 'Phone', 'Email', 'Job', 'Education', 'Image',
            'Username', 'UserID', 'DOB', 'URL', 'Tag',
@@ -11,6 +20,7 @@ __all__ = ['Name', 'Address', 'Phone', 'Email', 'Job', 'Education', 'Image',
 logger = logging.getLogger(__name__)
 
 
+@six.python_2_unicode_compatible
 class Field(Serializable):
     """Base class of all data fields, made only for inheritance."""
 
@@ -49,7 +59,7 @@ class Field(Serializable):
         u'clark'
         
         """
-        if isinstance(value, str):
+        if six.PY2 and isinstance(value, str):
             try:
                 value = value.decode('utf8')
             except UnicodeDecodeError:
@@ -62,14 +72,10 @@ class Field(Serializable):
                 value = None
         object.__setattr__(self, attr, value)
 
-    def __unicode__(self):
-        """Return the unicode representation of the object."""
-        return unicode(str(self))
-
     def __str__(self):
         """Return the str representation of the object (encoded with utf8)."""
         if hasattr(self, 'display') and getattr(self, 'display'):
-            return self.display.encode('utf8')
+            return self.display
         else:
             return ""
 
@@ -110,7 +116,7 @@ class Field(Serializable):
         :param d: dict, the dictionary to create a Field from.
         """
         kwargs = {}
-        for key, val in d.iteritems():
+        for key, val in d.items():
             if key.startswith('@'):
                 key = key[1:]
             if key == 'type':
@@ -121,7 +127,7 @@ class Field(Serializable):
                 val = str_to_datetime(val)
             elif key == 'date_range':
                 val = DateRange.from_dict(val)
-            kwargs[key.encode('ascii')] = val
+            kwargs[key] = val
         return cls(**kwargs)
 
     def to_dict(self):
@@ -136,7 +142,7 @@ class Field(Serializable):
                     value = date_to_str(value)
                 if isinstance(value, datetime.datetime):
                     value = datetime_to_str(value)
-                if value or isinstance(value, (bool, int, long)):
+                if value or isinstance(value, (bool, int)):
                     d[prefix + attr] = value
         if hasattr(self, 'display') and self.display:
             d['display'] = self.display

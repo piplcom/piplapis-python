@@ -13,8 +13,17 @@ The classes are based on the person data-model that's implemented here in the
 sub-package piplapis.data.
 
 """
+
+from six import string_types
+
+try:
+    import urllib.request as urllib2
+    from urllib.parse import urlencode
+except ImportError:
+    import urllib2
+    from urllib import urlencode
+
 import urllib
-import urllib2
 import itertools
 import threading
 
@@ -217,10 +226,10 @@ class SearchAPIRequest(object):
                 raise ValueError('hide_sponsored should be a boolean')
             if self.live_feeds is not None and type(self.live_feeds) is not bool:
                 raise ValueError('live_feeds should be a boolean')
-            if self.match_requirements is not None and not isinstance(self.match_requirements, basestring):
+            if self.match_requirements is not None and not isinstance(self.match_requirements, string_types):
                 raise ValueError('match_requirements should be an str or unicode object')
             if self.source_category_requirements is not None and not isinstance(self.source_category_requirements,
-                                                                                basestring):
+                                                                                string_types):
                 raise ValueError('source_category_requirements should be an str or unicode object')
             if self.show_sources not in ("all", "matching", "false", "true", True, False, None):
                 raise ValueError('show_sources has a wrong value. Should be "matching", "all", True, False or None')
@@ -228,8 +237,7 @@ class SearchAPIRequest(object):
                                              self.minimum_probability > 1 or self.minimum_probability < 0):
                 raise ValueError('minimum_probability should be a float between 0 and 1')
             if self.person.unsearchable_fields:
-                raise ValueError('Some fields are unsearchable: %s'
-                                 % self.person.unsearchable_fields)
+                raise ValueError('Some fields are unsearchable: %s' % self.person.unsearchable_fields)
         if not self.person.is_searchable:
             raise ValueError('No valid name/username/user_id/phone/email/address or search pointer in request')
 
@@ -287,16 +295,16 @@ class SearchAPIRequest(object):
         self.validate_query_params(strict=strict_validation)
 
         query = self.get_search_query()
-        request = urllib2.Request(url=self.get_base_url(), data=urllib.urlencode(query, True),
+        request = urllib2.Request(url=self.get_base_url(), data=urlencode(query, True).encode(),
                                   headers=SearchAPIRequest.HEADERS)
         try:
-            json_response = urllib2.urlopen(request).read()
+            json_response = urllib2.urlopen(request).read().decode()
         except urllib2.HTTPError as e:
             json_error = e.read()
             if not json_error:
                 raise e
             try:
-                raise SearchAPIError.from_json(json_error)
+                raise SearchAPIError.from_json(json_error.decode())
             except ValueError:
                 raise e
         return SearchAPIResponse.from_json(json_response)

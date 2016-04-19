@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 from piplapis.data import Person, Email, Name, URL, Username, UserID, Image, Phone, Address, OriginCountry, Language, \
@@ -15,6 +14,8 @@ from unittest import TestCase
 
 handler = logging.StreamHandler()
 logging.getLogger('piplapis').addHandler(handler)
+logger = logging.getLogger('piplapis')
+logger.warning("The api_tests module API in piplapis.tests is deprecated & does not receive updates.")
 
 
 class APITests(TestCase):
@@ -106,7 +107,7 @@ class APITests(TestCase):
     def test_contact_datatypes_are_as_expected(self):
         SearchAPIRequest.BASE_URL = os.getenv("API_TESTS_BASE_URL") + "?developer_class=contact"
         response = self.get_narrow_search_request().send()
-        available_data_types = {Name, Gender, DOB, Language, OriginCountry, Address, Phone}
+        available_data_types = {Name, Gender, DOB, URL, Language, OriginCountry, Address, Phone}
         for field in response.person.all_fields:
             if type(field) == Email:
                 self.assertEqual(field.address, 'full.email.available@business.subscription')
@@ -153,7 +154,7 @@ class APITests(TestCase):
         self.assertEqual(res.available_data.premium.images, 2)
         self.assertEqual(res.available_data.premium.genders, 1)
         self.assertEqual(res.available_data.premium.educations, 2)
-        self.assertEqual(res.available_data.premium.social_profiles, 5)
+        self.assertEqual(res.available_data.premium.social_profiles, 3)
 
     def test_make_sure_field_count_is_correct_on_basic(self):
         SearchAPIRequest.BASE_URL = os.getenv("API_TESTS_BASE_URL") + "?developer_class=social"
