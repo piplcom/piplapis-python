@@ -189,14 +189,14 @@ class SearchAPIRequest(object):
         self.person = person
 
         self.api_key = api_key or self.default_api_key
-        self.show_sources = show_sources or self.default_show_sources
-        self.live_feeds = live_feeds or self.default_live_feeds
+        self.show_sources = show_sources if show_sources is not None else self.default_show_sources
+        self.live_feeds = live_feeds if live_feeds is not None else self.default_live_feeds
         self.minimum_match = minimum_match or self.default_minimum_match
         self.minimum_probability = minimum_probability or self.default_minimum_probability
-        self.hide_sponsored = hide_sponsored or self.default_hide_sponsored
+        self.hide_sponsored = hide_sponsored if hide_sponsored is not None else self.default_hide_sponsored
         self.match_requirements = match_requirements or self.default_match_requirements
         self.source_category_requirements = source_category_requirements or self.default_source_category_requirements
-        self.use_https = use_https
+        self.use_https = use_https if use_https is not None else self.default_use_https
 
     def validate_query_params(self, strict=True):
         """Check if the request is valid and can be sent, raise ValueError if 
