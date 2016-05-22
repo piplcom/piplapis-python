@@ -74,6 +74,7 @@ class SearchAPIRequest(object):
         "matching" - only sources belonging to a matching person will be shown.
         Boolean True will behave like "matching".
     hide_sponsored - boolean (default False), whether to hide sponsored results.
+    infer_persons - boolean (default False),  whether the API should return person responses made up solely from data inferred by statistical analysis.
     minimum_match - a float between 0 and 1, to define the minimum match under which possible persons will not be returned.
     that may be the person you're looking for)
     live_feeds - boolean (default True), whether to use live data feeds. Can be turned off 
@@ -92,13 +93,14 @@ class SearchAPIRequest(object):
     default_minimum_match = None
     default_hide_sponsored = None
     default_live_feeds = None
+    default_infer_persons = None
     default_match_requirements = None
     default_source_category_requirements = None
 
     @classmethod
     def set_default_settings(cls, api_key=None, minimum_probability=None, show_sources=None,
                              minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=False,
-                             match_requirements=None, source_category_requirements=None):
+                             match_requirements=None, source_category_requirements=None, infer_persons=None):
         cls.default_api_key = api_key
         cls.default_minimum_probability = minimum_probability
         cls.default_show_sources = show_sources
@@ -108,6 +110,7 @@ class SearchAPIRequest(object):
         cls.default_use_https = use_https
         cls.default_match_requirements = match_requirements
         cls.default_source_category_requirements = source_category_requirements
+        cls.default_infer_persons = infer_persons
 
     def __init__(self, api_key=None, first_name=None, middle_name=None,
                  last_name=None, raw_name=None, email=None, phone=None, country_code=None,
@@ -115,7 +118,7 @@ class SearchAPIRequest(object):
                  raw_address=None, from_age=None, to_age=None, person=None,
                  search_pointer=None, minimum_probability=None, show_sources=None,
                  minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=None, 
-                 match_requirements=None, source_category_requirements=None):
+                 match_requirements=None, source_category_requirements=None, infer_persons=None):
         """Initiate a new request object with given query params.
         
         Each request must have at least one searchable parameter, meaning 
@@ -161,6 +164,7 @@ class SearchAPIRequest(object):
         :param live_feeds: bool, default True. Whether to use live feeds. Only relevant in plans that include
                       live feeds. Can be set to False for performance.
         :param hide_sponsored: bool, default False. Whether to hide sponsored results.
+        :param infer_persons: bool, default False. Whether the API should return person responses made up solely from data inferred by statistical analysis.
         :param use_https: bool, default False. Whether to use an encrypted connection.
         :param match_requirements: str/unicode, a match requirements criteria. This criteria defines what fields
                                    must be present in an API response in order for it to be returned as a match.
@@ -198,14 +202,15 @@ class SearchAPIRequest(object):
         self.person = person
 
         self.api_key = api_key or self.default_api_key
-        self.show_sources = show_sources or self.default_show_sources
-        self.live_feeds = live_feeds or self.default_live_feeds
+        self.show_sources = show_sources if show_sources is not None else self.default_show_sources
+        self.live_feeds = live_feeds if live_feeds is not None else self.default_live_feeds
         self.minimum_match = minimum_match or self.default_minimum_match
         self.minimum_probability = minimum_probability or self.default_minimum_probability
-        self.hide_sponsored = hide_sponsored or self.default_hide_sponsored
+        self.hide_sponsored = hide_sponsored if hide_sponsored is not None else self.default_hide_sponsored
         self.match_requirements = match_requirements or self.default_match_requirements
         self.source_category_requirements = source_category_requirements or self.default_source_category_requirements
-        self.use_https = use_https
+        self.use_https = use_https if use_https is not None else self.default_use_https
+        self.infer_persons = infer_persons if infer_persons is not None else self.default_infer_persons
 
     def validate_query_params(self, strict=True):
         """Check if the request is valid and can be sent, raise ValueError if 
@@ -224,6 +229,8 @@ class SearchAPIRequest(object):
                 raise ValueError('minimum_match should be a float between 0 and 1')
             if self.hide_sponsored is not None and type(self.hide_sponsored) is not bool:
                 raise ValueError('hide_sponsored should be a boolean')
+            if self.infer_persons is not None and type(self.infer_persons) is not bool:
+                raise ValueError('infer_persons should be a boolean')
             if self.live_feeds is not None and type(self.live_feeds) is not bool:
                 raise ValueError('live_feeds should be a boolean')
             if self.match_requirements is not None and not isinstance(self.match_requirements, string_types):
@@ -259,6 +266,8 @@ class SearchAPIRequest(object):
             query['minimum_match'] = self.minimum_match
         if self.hide_sponsored is not None:
             query['hide_sponsored'] = self.hide_sponsored
+        if self.infer_persons is not None:
+            query['infer_persons'] = self.infer_persons
         if self.match_requirements is not None:
             query['match_requirements'] = self.match_requirements
         if self.source_category_requirements is not None:
