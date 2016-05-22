@@ -1,6 +1,4 @@
 import logging
-import six
-
 from piplapis.data.utils import *
 
 try:
@@ -11,6 +9,7 @@ except ImportError:
     from urllib.parse import urlencode
     from builtins import int
 
+from six import u
 
 __all__ = ['Name', 'Address', 'Phone', 'Email', 'Job', 'Education', 'Image',
            'Username', 'UserID', 'DOB', 'URL', 'Tag',
@@ -55,7 +54,7 @@ class Field(Serializable):
         >>> from piplapis.data import Name
         >>> name = Name(first='clark')
         >>> name.first
-        u'clark'
+        'clark'
         
         """
         if six.PY2 and isinstance(value, str):
@@ -245,9 +244,9 @@ class Name(Field):
     def is_searchable(self):
         """A bool value that indicates whether the name is a valid name to 
         search by."""
-        first = alpha_chars(self.first or u'')
-        last = alpha_chars(self.last or u'')
-        raw = alpha_chars(self.raw or u'')
+        first = alpha_chars(self.first or u(''))
+        last = alpha_chars(self.last or u(''))
+        raw = alpha_chars(self.raw or u(''))
         return (len(first) >= 2 and len(last) >= 2) or len(raw) >= 4
 
 
@@ -322,9 +321,9 @@ class Address(Field):
         
         >>> address = Address(country='FR')
         >>> address.country
-        u'FR'
+        'FR'
         >>> address.country_full
-        u'France'
+        'France'
         
         """
         if self.country:
@@ -336,9 +335,9 @@ class Address(Field):
         
         >>> address = Address(country='US', state='CO')
         >>> address.state
-        u'CO'
+        'CO'
         >>> address.state_full
-        u'Colorado'
+        'Colorado'
         
         """
 
@@ -442,7 +441,7 @@ class Email(Field):
         
         >>> email = Email(address='clark.kent@example.com')
         >>> email.username
-        u'clark'
+        'clark'
         
         """
         if not self.is_valid_email:
@@ -456,7 +455,7 @@ class Email(Field):
         
         >>> email = Email(address='clark.kent@example.com')
         >>> email.domain
-        u'example.com'
+        'example.com'
         
         """
         if not self.is_valid_email:
@@ -646,7 +645,7 @@ class Username(Field):
     def is_searchable(self):
         """A bool value that indicates whether the username is a valid username 
         to search by."""
-        return len(alnum_chars(self.content or u'')) >= 4
+        return len(alnum_chars(self.content or u(''))) >= 4
 
 
 class UserID(Field):
