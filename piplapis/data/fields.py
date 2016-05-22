@@ -9,8 +9,7 @@ try:
 except ImportError:
     from urllib.parse import urlparse
     from urllib.parse import urlencode
-
-from builtins import int
+    from builtins import int
 
 
 __all__ = ['Name', 'Address', 'Phone', 'Email', 'Job', 'Education', 'Image',
