@@ -394,7 +394,7 @@ class Email(Field):
     attributes = ('type', 'disposable', 'email_provider')
     children = ('address', 'address_md5')
     types_set = set(['personal', 'work'])
-    re_email = re.compile('^[\w.%\-+]+@[\w.%\-]+\.[a-zA-Z]{2,6}$')
+    re_email = re.compile("^[a-zA-Z0-9'._%\-+]+@[a-zA-Z0-9._%\-]+\.[a-zA-Z]{2,24}$")
 
     def __init__(self, address=None, address_md5=None, type_=None,
                  disposable=None, email_provider=None, *args, **kwargs):
