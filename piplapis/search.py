@@ -15,6 +15,10 @@ sub-package piplapis.data.
 """
 import json
 
+import datetime
+
+import pytz as pytz
+
 from six import string_types
 
 try:
@@ -308,7 +312,8 @@ class SearchAPIRequest(object):
         request = urllib2.Request(url=self.get_base_url(), data=urlencode(query, True).encode(),
                                   headers=SearchAPIRequest.HEADERS)
         try:
-            json_response = urllib2.urlopen(request).read().decode()
+            response = urllib2.urlopen(request)
+            json_response = response.read().decode()
         except urllib2.HTTPError as e:
             json_error = e.read()
             if not json_error:
@@ -317,7 +322,22 @@ class SearchAPIRequest(object):
                 raise SearchAPIError.from_json(json_error.decode())
             except ValueError:
                 raise e
-        return SearchAPIResponse.from_json(json_response)
+
+        search_response = SearchAPIResponse.from_json(json_response)
+        # Get headers
+        if 'X-APIKey-Quota-Allotted' in response.headers:
+            search_response.quota_allotted = int(response.headers.get('X-APIKey-Quota-Allotted'))
+        if 'X-APIKey-Quota-Current' in response.headers:
+            search_response.quota_current = int(response.headers.get('X-APIKey-Quota-Current'))
+        if 'X-APIKey-QPS-Allotted' in response.headers:
+            search_response.qps_allotted = int(response.headers.get('X-APIKey-QPS-Allotted'))
+        if 'X-APIKey-QPS-Current' in response.headers:
+            search_response.qps_current = int(response.headers.get('X-APIKey-QPS-Current'))
+        if 'X-Quota-Reset' in response.headers:
+            datetime_str = response.headers.get('X-Quota-Reset')
+            time_format = "%A, %B %d, %Y %I:%M:%S %p %Z"
+            search_response.quota_reset = datetime.datetime.strptime(datetime_str, time_format).replace(tzinfo=pytz.utc)
+        return search_response
 
     def send_async(self, callback, strict_validation=True):
         """Same as send() but in a non-blocking way.
@@ -440,6 +460,11 @@ class SearchAPIResponse(Serializable):
         if not self.persons_count:
             self.persons_count = 1 if self.person is not None else len(self.possible_persons)
         self.raw_json = None
+        self.qps_allotted = None  # Your permitted queries per second
+        self.qps_current = None  # The number of queries that you've run in the same second as this one.
+        self.quota_allotted = None  # Your API quota
+        self.quota_current = None  # The API quota used so far
+        self.quota_reset = None  # The time when your quota resets
 
     @property
     def matching_sources(self):

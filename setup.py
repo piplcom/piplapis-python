@@ -38,7 +38,8 @@ distutils.core.setup(name='piplapis-python',
                          "Programming Language :: Python :: 3"
                      ],
                      install_requires=[
-                         'six>=1.9'
+                         'six>=1.9',
+                         'pytz'
                      ],
                      packages=['piplapis', 'piplapis.data'],
                      )
