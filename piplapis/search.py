@@ -402,7 +402,8 @@ class SearchAPIResponse(Serializable):
     def __init__(self, query=None, person=None, sources=None,
                  possible_persons=None, warnings_=None, http_status_code=None,
                  visible_sources=None, available_sources=None, search_id=None,
-                 match_requirements=None, available_data=None, source_category_requirements=None, *args, **kwargs):
+                 match_requirements=None, available_data=None, source_category_requirements=None,
+                 persons_count=None, *args, **kwargs):
         """
         :param query: A Person object with the query as interpreted by Pipl.
         :param person: A Person object with data about the person in the query.
@@ -419,6 +420,7 @@ class SearchAPIResponse(Serializable):
         :param match_requirements: str or unicode. Shows how Pipl interpreted your match_requirements criteria.
         :param source_category_requirements: str or unicode. Shows how Pipl interpreted your
                                              source_category_requirements criteria.
+         :param persons_count: int. The number of persons in this response.
         """
         self.query = query
         self.person = person
@@ -433,6 +435,9 @@ class SearchAPIResponse(Serializable):
         self.match_requirements = match_requirements
         self.source_category_requirements = source_category_requirements
         self.available_data = available_data
+        self.persons_count = persons_count
+        if not self.persons_count:
+            self.persons_count = 1 if self.person is not None else len(self.possible_persons)
 
     @property
     def matching_sources(self):
@@ -499,6 +504,7 @@ class SearchAPIResponse(Serializable):
         available_sources = d.get('@available_sources')
         warnings_ = d.get('warnings', [])
         search_id = d.get('@search_id')
+        persons_count = d.get('@persons_count')
 
         match_requirements = d.get('match_requirements')
         source_category_requirements = d.get('source_category_requirements')
@@ -524,7 +530,8 @@ class SearchAPIResponse(Serializable):
                                  visible_sources=visible_sources, available_sources=available_sources,
                                  search_id=search_id, match_requirements=match_requirements,
                                  available_data=available_data,
-                                 source_category_requirements=source_category_requirements)
+                                 source_category_requirements=source_category_requirements,
+                                 persons_count=persons_count)
 
     def to_dict(self):
         """Return a dict representation of the response."""
@@ -537,6 +544,8 @@ class SearchAPIResponse(Serializable):
             d['@available_sources'] = self.available_sources
         if self.search_id:
             d['@search_id'] = self.search_id
+        if self.persons_count:
+            d['@persons_count'] = self.persons_count
         if self.warnings:
             d['warnings'] = self.warnings
         if self.match_requirements:
