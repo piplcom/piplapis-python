@@ -13,6 +13,7 @@ The classes are based on the person data-model that's implemented here in the
 sub-package piplapis.data.
 
 """
+import json
 
 from six import string_types
 
@@ -438,6 +439,7 @@ class SearchAPIResponse(Serializable):
         self.persons_count = persons_count
         if not self.persons_count:
             self.persons_count = 1 if self.person is not None else len(self.possible_persons)
+        self.raw_json = None
 
     @property
     def matching_sources(self):
@@ -493,6 +495,18 @@ class SearchAPIResponse(Serializable):
         """
         key_function = lambda source: source.match
         return self.group_sources(key_function)
+
+    @classmethod
+    def from_json(cls, json_str):
+        """
+        We override this method in SearchAPIResponse so that
+        :param json_str:
+        :return:
+        """
+        d = json.loads(json_str)
+        obj = cls.from_dict(d)
+        obj.raw_json = json_str
+        return obj
 
     @classmethod
     def from_dict(cls, d):
