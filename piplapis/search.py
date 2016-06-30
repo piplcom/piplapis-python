@@ -314,30 +314,36 @@ class SearchAPIRequest(object):
         try:
             response = urllib2.urlopen(request)
             json_response = response.read().decode()
+            search_response = SearchAPIResponse.from_json(json_response)
+            search_response.add_quota_throttle_data(*self._get_quota_and_throttle_data(response.headers))
+            return search_response
         except urllib2.HTTPError as e:
             json_error = e.read()
             if not json_error:
                 raise e
             try:
-                raise SearchAPIError.from_json(json_error.decode())
+                exception = SearchAPIError.from_json(json_error.decode())
+                exception.add_quota_and_throttle_data(*self._get_quota_and_throttle_data(e.headers))
+                raise exception
             except ValueError:
                 raise e
 
-        search_response = SearchAPIResponse.from_json(json_response)
-        # Get headers
-        if 'X-APIKey-Quota-Allotted' in response.headers:
-            search_response.quota_allotted = int(response.headers.get('X-APIKey-Quota-Allotted'))
-        if 'X-APIKey-Quota-Current' in response.headers:
-            search_response.quota_current = int(response.headers.get('X-APIKey-Quota-Current'))
-        if 'X-APIKey-QPS-Allotted' in response.headers:
-            search_response.qps_allotted = int(response.headers.get('X-APIKey-QPS-Allotted'))
-        if 'X-APIKey-QPS-Current' in response.headers:
-            search_response.qps_current = int(response.headers.get('X-APIKey-QPS-Current'))
-        if 'X-Quota-Reset' in response.headers:
-            datetime_str = response.headers.get('X-Quota-Reset')
+    @staticmethod
+    def _get_quota_and_throttle_data(headers):
+        quota_allotted, quota_current, qps_allotted, qps_current, quota_reset = None, None, None, None, None
+        if 'X-APIKey-Quota-Allotted' in headers:
+            quota_allotted = int(headers.get('X-APIKey-Quota-Allotted'))
+        if 'X-APIKey-Quota-Current' in headers:
+            quota_current = int(headers.get('X-APIKey-Quota-Current'))
+        if 'X-APIKey-QPS-Allotted' in headers:
+            qps_allotted = int(headers.get('X-APIKey-QPS-Allotted'))
+        if 'X-APIKey-QPS-Current' in headers:
+            qps_current = int(headers.get('X-APIKey-QPS-Current'))
+        if 'X-Quota-Reset' in headers:
+            datetime_str = headers.get('X-Quota-Reset')
             time_format = "%A, %B %d, %Y %I:%M:%S %p %Z"
-            search_response.quota_reset = datetime.datetime.strptime(datetime_str, time_format).replace(tzinfo=pytz.utc)
-        return search_response
+            quota_reset = datetime.datetime.strptime(datetime_str, time_format).replace(tzinfo=pytz.utc)
+        return quota_allotted, quota_current, qps_allotted, qps_current, quota_reset
 
     def send_async(self, callback, strict_validation=True):
         """Same as send() but in a non-blocking way.
@@ -728,6 +734,14 @@ class SearchAPIResponse(Serializable):
         return Relationship
         """
         return self.person.relationships[0] if self.person and len(self.person.relationships) > 0 else None
+
+    def add_quota_throttle_data(self, quota_allotted, quota_current, qps_allotted, qps_current, quota_reset):
+        # Get headers
+        self.quota_allotted = quota_allotted
+        self.quota_current = quota_current
+        self.qps_allotted = qps_allotted
+        self.qps_current = qps_current
+        self.quota_reset = quota_reset
 
 
 class SearchAPIError(APIError):
