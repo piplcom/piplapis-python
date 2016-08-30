@@ -464,7 +464,6 @@ class SearchAPIResponse(Serializable):
         self.available_data = available_data
         self.match_requirements = match_requirements
         self.source_category_requirements = source_category_requirements
-        self.available_data = available_data
         self.persons_count = persons_count
         if not self.persons_count:
             self.persons_count = 1 if self.person is not None else len(self.possible_persons)
