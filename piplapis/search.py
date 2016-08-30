@@ -305,6 +305,9 @@ class SearchAPIRequest(object):
         ...     response = request.send()
         ... except SearchAPIError as e:
         ...     print e.http_status_code, e
+
+        :return: A Response from the API
+        :rtype: SearchAPIResponse
         """
         self.validate_query_params(strict=strict_validation)
 
