@@ -305,6 +305,9 @@ class SearchAPIRequest(object):
         ...     response = request.send()
         ... except SearchAPIError as e:
         ...     print e.http_status_code, e
+
+        :return: A Response from the API
+        :rtype: SearchAPIResponse
         """
         self.validate_query_params(strict=strict_validation)
 
@@ -461,7 +464,6 @@ class SearchAPIResponse(Serializable):
         self.available_data = available_data
         self.match_requirements = match_requirements
         self.source_category_requirements = source_category_requirements
-        self.available_data = available_data
         self.persons_count = persons_count
         if not self.persons_count:
             self.persons_count = 1 if self.person is not None else len(self.possible_persons)
