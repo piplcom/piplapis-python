@@ -79,7 +79,7 @@ class FieldCount(Serializable):
     def to_dict(self):
         d = {}
         for child in self.children:
-            if getattr(self, child) > 0:
+            if getattr(self, child):
                 d[child] = getattr(self, child)
         return d
 
