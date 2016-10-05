@@ -136,10 +136,10 @@ class Field(Serializable):
                 value = getattr(self, attr)
                 if isinstance(value, Serializable):
                     value = value.to_dict()
-                if isinstance(value, datetime.date):
-                    value = date_to_str(value)
                 if isinstance(value, datetime.datetime):
                     value = datetime_to_str(value)
+                if isinstance(value, datetime.date):
+                    value = date_to_str(value)
                 if value or isinstance(value, (bool, int)):
                     d[prefix + attr] = value
         if hasattr(self, 'display') and self.display:
