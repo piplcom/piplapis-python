@@ -32,12 +32,12 @@ class AvailableData(Serializable):
 class FieldCount(Serializable):
     children = ('addresses', 'ethnicities', 'emails', 'dobs', 'genders', 'user_ids', 'social_profiles',
                 'educations', 'jobs', 'images', 'languages', 'origin_countries', 'names', 'phones',
-                'relationships', 'usernames')
+                'mobile_phones', 'landline_phones', 'relationships', 'usernames')
 
     def __init__(self, addresses=None, ethnicities=None, emails=None, dobs=None,
                  genders=None, user_ids=None, social_profiles=None, educations=None, jobs=None, images=None,
                  languages=None, origin_countries=None, names=None, phones=None, relationships=None,
-                 usernames=None, *args, **kwargs):
+                 usernames=None, mobile_phones=None, landline_phones=None, *args, **kwargs):
         """
         A summary of the data within an API response
         :param addresses: int, the number of addresses
@@ -53,7 +53,9 @@ class FieldCount(Serializable):
         :param languages: int, the number of languages
         :param origin_countries: int, the number of origin countries
         :param names: int, the number of names
-        :param phones: int, the number of phones
+        :param phones: int, the number of phones, both mobile and landline phones
+        :param mobile_phones: int, the number of mobile phones
+        :param landline_phones: int, the number of landline phones
         :param relationships: int, the number of relationships
         :param usernames: int, the number of usernames
         """
@@ -66,6 +68,8 @@ class FieldCount(Serializable):
         self.genders = genders
         self.ethnicities = ethnicities
         self.phones = phones
+        self.mobile_phones = mobile_phones
+        self.landline_phones = landline_phones
         self.origin_countries = origin_countries
         self.ethnicities = ethnicities
         self.usernames = usernames
