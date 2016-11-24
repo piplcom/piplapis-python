@@ -16,6 +16,7 @@ sub-package piplapis.data.
 import json
 
 import datetime
+import logging
 
 import pytz as pytz
 
@@ -37,6 +38,8 @@ from piplapis.data.available_data import AvailableData
 from piplapis.error import APIError
 from piplapis.data import *
 from piplapis.data.utils import Serializable
+
+logger = logging.getLogger(__name__)
 
 
 class SearchAPIRequest(object):
@@ -122,7 +125,7 @@ class SearchAPIRequest(object):
                  raw_phone=None, username=None, country=None, state=None, city=None,
                  raw_address=None, from_age=None, to_age=None, person=None,
                  search_pointer=None, minimum_probability=None, show_sources=None,
-                 minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=None, 
+                 minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=None,
                  match_requirements=None, source_category_requirements=None, infer_persons=None):
         """Initiate a new request object with given query params.
         
@@ -318,7 +321,7 @@ class SearchAPIRequest(object):
             response = urllib2.urlopen(request)
             json_response = response.read().decode()
             search_response = SearchAPIResponse.from_json(json_response)
-            search_response.add_quota_throttle_data(*self._get_quota_and_throttle_data(response.headers))
+            search_response._add_rate_limiting_headers(*self._get_quota_and_throttle_data(response.headers))
             return search_response
         except urllib2.HTTPError as e:
             json_error = e.read()
@@ -326,27 +329,55 @@ class SearchAPIRequest(object):
                 raise e
             try:
                 exception = SearchAPIError.from_json(json_error.decode())
-                exception.add_quota_and_throttle_data(*self._get_quota_and_throttle_data(e.headers))
+                exception._add_rate_limiting_headers(*self._get_quota_and_throttle_data(e.headers))
                 raise exception
             except ValueError:
                 raise e
 
     @staticmethod
     def _get_quota_and_throttle_data(headers):
-        quota_allotted, quota_current, qps_allotted, qps_current, quota_reset = None, None, None, None, None
+
+        # Set default values
+        (quota_allotted, quota_current, quota_reset, qps_allotted, qps_current, qps_live_allotted, qps_live_current,
+         qps_demo_allotted, qps_demo_current, demo_usage_allotted, demo_usage_current, demo_usage_expiry) = (None,) * 12
+
+        time_format = "%A, %B %d, %Y %I:%M:%S %p %Z"
+
+        # Handle quota headers
         if 'X-APIKey-Quota-Allotted' in headers:
             quota_allotted = int(headers.get('X-APIKey-Quota-Allotted'))
         if 'X-APIKey-Quota-Current' in headers:
             quota_current = int(headers.get('X-APIKey-Quota-Current'))
-        if 'X-APIKey-QPS-Allotted' in headers:
-            qps_allotted = int(headers.get('X-APIKey-QPS-Allotted'))
-        if 'X-APIKey-QPS-Current' in headers:
-            qps_current = int(headers.get('X-APIKey-QPS-Current'))
         if 'X-Quota-Reset' in headers:
             datetime_str = headers.get('X-Quota-Reset')
-            time_format = "%A, %B %d, %Y %I:%M:%S %p %Z"
             quota_reset = datetime.datetime.strptime(datetime_str, time_format).replace(tzinfo=pytz.utc)
-        return quota_allotted, quota_current, qps_allotted, qps_current, quota_reset
+
+        # Handle throttling
+        if 'X-QPS-Allotted' in headers:
+            qps_allotted = int(headers.get('X-QPS-Allotted'))
+        if 'X-QPS-Current' in headers:
+            qps_current = int(headers.get('X-QPS-Current'))
+        if 'X-QPS-Live-Allotted' in headers:
+            qps_live_allotted = int(headers.get('X-QPS-Live-Allotted'))
+        if 'X-QPS-Live-Current' in headers:
+            qps_live_current = int(headers.get('X-QPS-Live-Current'))
+        if 'X-QPS-Demo-Allotted' in headers:
+            qps_demo_allotted = int(headers.get('X-QPS-Demo-Allotted'))
+        if 'X-QPS-Demo-Current' in headers:
+            qps_demo_current = int(headers.get('X-QPS-Demo-Current'))
+
+        # Handle Demo usage allowance
+        if 'X-Demo-Usage-Allotted' in headers:
+            demo_usage_allotted = int(headers.get('X-Demo-Usage-Allotted'))
+        if 'X-Demo-Usage-Current' in headers:
+            demo_usage_current = int(headers.get('X-Demo-Usage-Current'))
+        if 'X-Demo-Usage-Expiry' in headers:
+            datetime_str = headers.get('X-Demo-Usage-Expiry')
+            demo_usage_expiry = datetime.datetime.strptime(datetime_str, time_format).replace(tzinfo=pytz.utc)
+
+        return (quota_allotted, quota_current, quota_reset, qps_allotted, qps_current, qps_live_allotted,
+                qps_live_current, qps_demo_allotted, qps_demo_current, demo_usage_allotted,
+                demo_usage_current, demo_usage_expiry)
 
     def send_async(self, callback, strict_validation=True):
         """Same as send() but in a non-blocking way.
@@ -468,11 +499,21 @@ class SearchAPIResponse(Serializable):
         if not self.persons_count:
             self.persons_count = 1 if self.person is not None else len(self.possible_persons)
         self.raw_json = None
+
+        # Rate limiting data
         self.qps_allotted = None  # Your permitted queries per second
         self.qps_current = None  # The number of queries that you've run in the same second as this one.
+        self.qps_live_allotted = None  # Your permitted queries per second
+        self.qps_live_current = None  # The number of queries that you've run in the same second as this one.
+        self.qps_demo_allotted = None  # Your permitted queries per second
+        self.qps_demo_current = None  # The number of queries that you've run in the same second as this one.
         self.quota_allotted = None  # Your API quota
         self.quota_current = None  # The API quota used so far
         self.quota_reset = None  # The time when your quota resets
+        self.demo_usage_allotted = None  # Your permitted demo queries
+        self.demo_usage_current = None  # The number of demo queries that you've already run
+        self.demo_usage_expiry = None  # The expiry time of your demo usage
+
 
     @property
     def matching_sources(self):
@@ -737,13 +778,26 @@ class SearchAPIResponse(Serializable):
         """
         return self.person.relationships[0] if self.person and len(self.person.relationships) > 0 else None
 
-    def add_quota_throttle_data(self, quota_allotted, quota_current, qps_allotted, qps_current, quota_reset):
-        # Get headers
-        self.quota_allotted = quota_allotted
-        self.quota_current = quota_current
+    def add_quota_throttle_data(self, *args, **kwargs):
+        logger.warn("SearchAPIResponse.add_quota_throttle_data is deprecated")
+        return self._add_rate_limiting_headers(*args, **kwargs)
+
+    def _add_rate_limiting_headers(self, quota_allotted=None, quota_current=None, quota_reset=None, qps_allotted=None,
+                                   qps_current=None, qps_live_allotted=None, qps_live_current=None, qps_demo_allotted=None,
+                                   qps_demo_current=None, demo_usage_allotted=None, demo_usage_current=None,
+                                   demo_usage_expiry=None):
         self.qps_allotted = qps_allotted
         self.qps_current = qps_current
+        self.qps_live_allotted = qps_live_allotted
+        self.qps_live_current = qps_live_current
+        self.qps_demo_allotted = qps_demo_allotted
+        self.qps_demo_current = qps_demo_current
+        self.quota_allotted = quota_allotted
+        self.quota_current = quota_current
         self.quota_reset = quota_reset
+        self.demo_usage_allotted = demo_usage_allotted
+        self.demo_usage_current = demo_usage_current
+        self.demo_usage_expiry = demo_usage_expiry
 
 
 class SearchAPIError(APIError):
