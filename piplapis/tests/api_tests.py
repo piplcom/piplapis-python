@@ -3,7 +3,7 @@ import os
 from piplapis.data import Person, Email, Name, URL, Username, UserID, Image, Phone, Address, OriginCountry, Language, \
     DOB, Gender
 from piplapis.data.containers import Relationship
-from piplapis.search import SearchAPIRequest
+from piplapis.search import SearchAPIRequest, SearchAPIResponse
 from unittest import TestCase
 
 
@@ -173,3 +173,14 @@ class APITests(TestCase):
         self.assertEqual(res.available_data.basic.genders, 1)
         self.assertEqual(res.available_data.basic.educations, 2)
         self.assertEqual(res.available_data.basic.social_profiles, 3)
+
+    def test_response_class_default(self):
+        request = SearchAPIRequest(email="clark.kent@example.com")
+        response = request.send()
+        self.assertIsInstance(response, SearchAPIResponse)
+
+    def test_response_class_custom(self):
+        custom_response_class = type('CustomResponseClass', (SearchAPIResponse,), {})
+        request = SearchAPIRequest(email="clark.kent@example.com", response_class=custom_response_class)
+        response = request.send()
+        self.assertIsInstance(response, custom_response_class)
