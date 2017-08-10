@@ -51,7 +51,7 @@ class SearchAPIRequest(object):
                parameters):
             
     >>> from piplapis.search import SearchAPIRequest
-    >>> request = SearchAPIRequest(api_key='samplekey', email='clark.kent@example.com')
+    >>> request = SearchAPIRequest(api_key='YOURKEY', email='clark.kent@example.com')
     >>> response = request.send()
     
     Option 2 - using the data-model (useful for more complex queries; for 
@@ -66,7 +66,7 @@ class SearchAPIRequest(object):
     >>>           Address(country='US', state='KS', city='Smallville'),
     >>>           Address(country='US', state='KS', city='Metropolis'),
     >>>           Job(title='Field Reporter')]
-    >>> request = SearchAPIRequest(api_key='samplekey',
+    >>> request = SearchAPIRequest(api_key='YOURKEY',
     >>>                            person=Person(fields=fields))
     >>> response = request.send()
 
@@ -94,7 +94,7 @@ class SearchAPIRequest(object):
 
     # The following are default settings for all request objects
     # You can set them once instead of passing them to the constructor every time
-    default_api_key = 'sample_key'
+    default_api_key = None
     default_use_https = False
     default_minimum_probability = None
     default_show_sources = None
@@ -136,7 +136,7 @@ class SearchAPIRequest(object):
         
         Args:
         
-        :param api_key: str, a valid API key (use "samplekey" for experimenting).
+        :param api_key: str, a valid API key.
                    Note that you can set a default API key 
                    (piplapis.search.default_api_key = '<your_key>') instead of 
                    passing it to each request object. 
@@ -303,7 +303,7 @@ class SearchAPIRequest(object):
         
         example:
         >>> from piplapis.search import SearchAPIRequest, SearchAPIError
-        >>> request = SearchAPIRequest('samplekey', email='clark.kent@example.com')
+        >>> request = SearchAPIRequest('YOURKEY', email='clark.kent@example.com')
         >>> try:
         ...     response = request.send()
         ... except SearchAPIError as e:
@@ -395,7 +395,7 @@ class SearchAPIRequest(object):
         >>> def my_callback(response=None, error=None):
         ...     print response or error
         ...
-        >>> request = SearchAPIRequest('samplekey', email='clark.kent@example.com')
+        >>> request = SearchAPIRequest('YOURKEY', email='clark.kent@example.com')
         >>> request.send_async(my_callback)
         >>> do_other_things()
         """
