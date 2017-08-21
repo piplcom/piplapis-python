@@ -122,7 +122,7 @@ class SearchAPIRequest(object):
 
     def __init__(self, api_key=None, first_name=None, middle_name=None,
                  last_name=None, raw_name=None, email=None, phone=None, country_code=None,
-                 raw_phone=None, username=None, country=None, state=None, city=None,
+                 raw_phone=None, username=None, user_id=None, country=None, state=None, city=None,
                  raw_address=None, from_age=None, to_age=None, person=None,
                  search_pointer=None, minimum_probability=None, show_sources=None,
                  minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=None,
@@ -149,7 +149,8 @@ class SearchAPIRequest(object):
         :param phone: int/long. A national phone with no formatting.
         :param country_code: int. The phone country code
         :param raw_phone: string. A phone to be sent as-is, will be parsed by Pipl.
-        :param username: unicode, minimum 4 chars.
+        :param username: unicode, minimum 3 chars.
+        :param user_id: unicode.
         :param country: unicode, a 2 letter country code from:
                    http://en.wikipedia.org/wiki/ISO_3166-2
         :param state: unicode, a state code from:
@@ -197,6 +198,8 @@ class SearchAPIRequest(object):
             person.add_fields([Phone(country_code=country_code, number=phone, raw=raw_phone)])
         if username:
             person.add_fields([Username(content=username)])
+        if user_id:
+            person.add_fields([UserID(content=user_id)])
         if country or state or city:
             address = Address(country=country, state=state, city=city)
             person.add_fields([address])
@@ -380,7 +383,7 @@ class SearchAPIRequest(object):
                 demo_usage_current, demo_usage_expiry)
 
     def send_async(self, callback, strict_validation=True):
-        """Same as send() but in a non-blocking way.
+        """Sam  e as send() but in a non-blocking way.
         
         use this method if you want to send the request asynchronously so your 
         program can do other things while waiting for the response.
