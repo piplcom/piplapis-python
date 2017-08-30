@@ -645,7 +645,7 @@ class Username(Field):
     def is_searchable(self):
         """A bool value that indicates whether the username is a valid username 
         to search by."""
-        return len(alnum_chars(self.content or u(''))) >= 4
+        return len(alnum_chars(self.content or u(''))) >= 3
 
 
 class UserID(Field):
