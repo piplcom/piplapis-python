@@ -165,7 +165,7 @@ def date_to_str(d):
     """Transform a date object to an str object.
     :param d: date object to convert to a string.
     """
-    return d.isoformat()
+    return d.strftime(DATE_FORMAT)
 
 
 def is_valid_url(url):
