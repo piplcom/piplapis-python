@@ -549,7 +549,7 @@ class SearchAPIResponse(Serializable):
         and the value is a list of all the sources with this domain.
         
         """
-        key_function = lambda source: source.domain
+        key_function = lambda source: source.domain or ''
         return self.group_sources(key_function)
 
     def group_sources_by_category(self):
@@ -559,7 +559,7 @@ class SearchAPIResponse(Serializable):
         and the value is a list of all the sources with this category.
         
         """
-        key_function = lambda source: source.category
+        key_function = lambda source: source.category or ''
         return self.group_sources(key_function)
 
     def group_sources_by_match(self):
@@ -570,7 +570,7 @@ class SearchAPIResponse(Serializable):
         match value.
 
         """
-        key_function = lambda source: source.match
+        key_function = lambda source: source.match or 0
         return self.group_sources(key_function)
 
     @classmethod
