@@ -99,6 +99,7 @@ class SearchAPIRequest(object):
     default_minimum_probability = None
     default_show_sources = None
     default_minimum_match = None
+    default_top_match = False
     default_hide_sponsored = None
     default_live_feeds = None
     default_infer_persons = None
@@ -108,11 +109,12 @@ class SearchAPIRequest(object):
     @classmethod
     def set_default_settings(cls, api_key=None, minimum_probability=None, show_sources=None,
                              minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=False,
-                             match_requirements=None, source_category_requirements=None, infer_persons=None):
+                             match_requirements=None, source_category_requirements=None, infer_persons=None, top_match=False):
         cls.default_api_key = api_key
         cls.default_minimum_probability = minimum_probability
         cls.default_show_sources = show_sources
         cls.default_minimum_match = minimum_match
+        cls.default_top_match = top_match
         cls.default_hide_sponsored = hide_sponsored
         cls.default_live_feeds = live_feeds
         cls.default_use_https = use_https
@@ -122,11 +124,11 @@ class SearchAPIRequest(object):
 
     def __init__(self, api_key=None, first_name=None, middle_name=None,
                  last_name=None, raw_name=None, email=None, phone=None, country_code=None,
-                 raw_phone=None, username=None, user_id=None, country=None, state=None, city=None,
+                 raw_phone=None, username=None, user_id=None, country=None, state=None, city=None, zip_code=None,
                  raw_address=None, from_age=None, to_age=None, person=None,
                  search_pointer=None, minimum_probability=None, show_sources=None,
                  minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=None,
-                 match_requirements=None, source_category_requirements=None, infer_persons=None):
+                 match_requirements=None, source_category_requirements=None, infer_persons=None, top_match=None):
         """Initiate a new request object with given query params.
         
         Each request must have at least one searchable parameter, meaning 
@@ -148,6 +150,7 @@ class SearchAPIRequest(object):
         :param email: unicode.
         :param phone: int/long. A national phone with no formatting.
         :param country_code: int. The phone country code
+        :param zip_code: int. Address zip code
         :param raw_phone: string. A phone to be sent as-is, will be parsed by Pipl.
         :param username: unicode, minimum 3 chars.
         :param user_id: unicode.
@@ -200,8 +203,8 @@ class SearchAPIRequest(object):
             person.add_fields([Username(content=username)])
         if user_id:
             person.add_fields([UserID(content=user_id)])
-        if country or state or city:
-            address = Address(country=country, state=state, city=city)
+        if country or state or city or zip_code:
+            address = Address(country=country, state=state, city=city, zip_code=zip_code)
             person.add_fields([address])
         if raw_address:
             person.add_fields([Address(raw=raw_address)])
@@ -216,6 +219,7 @@ class SearchAPIRequest(object):
         self.show_sources = show_sources if show_sources is not None else self.default_show_sources
         self.live_feeds = live_feeds if live_feeds is not None else self.default_live_feeds
         self.minimum_match = minimum_match or self.default_minimum_match
+        self.top_match = top_match or self.default_top_match
         self.minimum_probability = minimum_probability or self.default_minimum_probability
         self.hide_sponsored = hide_sponsored if hide_sponsored is not None else self.default_hide_sponsored
         self.match_requirements = match_requirements or self.default_match_requirements
@@ -235,6 +239,8 @@ class SearchAPIRequest(object):
         if not self.api_key:
             raise ValueError('API key is missing')
         if strict:
+            if self.top_match and type(self.top_match) is not bool:
+                raise ValueError('top_match should be a boolean')
             if self.minimum_match and (type(self.minimum_match) is not float or
                                        self.minimum_match > 1 or self.minimum_match < 0):
                 raise ValueError('minimum_match should be a float between 0 and 1')
@@ -275,6 +281,8 @@ class SearchAPIRequest(object):
             query['minimum_probability'] = self.minimum_probability
         if self.minimum_match is not None:
             query['minimum_match'] = self.minimum_match
+        if self.top_match is not None:
+            query['top_match'] = self.top_match
         if self.hide_sponsored is not None:
             query['hide_sponsored'] = self.hide_sponsored
         if self.infer_persons is not None:
