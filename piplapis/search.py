@@ -99,7 +99,7 @@ class SearchAPIRequest(object):
     default_minimum_probability = None
     default_show_sources = None
     default_minimum_match = None
-    default_top_match = False
+    default_top_match = None
     default_hide_sponsored = None
     default_live_feeds = None
     default_infer_persons = None
@@ -109,7 +109,7 @@ class SearchAPIRequest(object):
     @classmethod
     def set_default_settings(cls, api_key=None, minimum_probability=None, show_sources=None,
                              minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=False,
-                             match_requirements=None, source_category_requirements=None, infer_persons=None, top_match=False):
+                             match_requirements=None, source_category_requirements=None, infer_persons=None, top_match=None):
         cls.default_api_key = api_key
         cls.default_minimum_probability = minimum_probability
         cls.default_show_sources = show_sources
