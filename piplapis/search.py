@@ -301,6 +301,7 @@ class SearchAPIRequest(object):
             query['show_sources'] = self.show_sources
         return query
 
+
     def send(self, strict_validation=True):
         """Send the request and return the response or raise SearchAPIError.
         
