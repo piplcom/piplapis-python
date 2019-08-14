@@ -124,8 +124,8 @@ class SearchAPIRequest(object):
 
     def __init__(self, api_key=None, first_name=None, middle_name=None,
                  last_name=None, raw_name=None, email=None, phone=None, country_code=None,
-                 raw_phone=None, username=None, user_id=None, country=None, state=None, city=None, zip_code=None,
-                 raw_address=None, from_age=None, to_age=None, person=None,
+                 raw_phone=None, username=None, user_id=None, country=None, state=None, city=None, street=None, zip_code=None,
+                raw_address=None, from_age=None, to_age=None, person=None,
                  search_pointer=None, minimum_probability=None, show_sources=None,
                  minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=None,
                  match_requirements=None, source_category_requirements=None, infer_persons=None, top_match=None):
@@ -151,6 +151,7 @@ class SearchAPIRequest(object):
         :param phone: int/long. A national phone with no formatting.
         :param country_code: int. The phone country code
         :param zip_code: int. Address zip code
+        :param street: unicode, minimum 2 chars.
         :param raw_phone: string. A phone to be sent as-is, will be parsed by Pipl.
         :param username: unicode, minimum 3 chars.
         :param user_id: unicode.
@@ -203,8 +204,8 @@ class SearchAPIRequest(object):
             person.add_fields([Username(content=username)])
         if user_id:
             person.add_fields([UserID(content=user_id)])
-        if country or state or city or zip_code:
-            address = Address(country=country, state=state, city=city, zip_code=zip_code)
+        if country or state or city or street or zip_code:
+            address = Address(country=country, state=state, city=city, street=street, zip_code=zip_code)
             person.add_fields([address])
         if raw_address:
             person.add_fields([Address(raw=raw_address)])
