@@ -264,7 +264,7 @@ class SearchAPIRequest(object):
             if self.minimum_probability and (type(self.minimum_probability) is not float or
                                              self.minimum_probability > 1 or self.minimum_probability < 0):
                 raise ValueError('minimum_probability should be a float between 0 and 1')
-            if self.person.unsearchable_fields and not self.person.is_searchable:
+            if self.person.unsearchable_fields and self.person.is_searchable:
                 raise ValueError('Some fields are unsearchable: %s' % self.person.unsearchable_fields)
         if not self.person.is_searchable:
             raise ValueError('No valid name/username/user_id/phone/email/address or search pointer in request')
