@@ -204,7 +204,7 @@ class SearchAPIRequest(object):
         if username:
             person.add_fields([Username(content=username)])
         if url:
-            person.add_fields([URL(content=url)])
+            person.add_fields([URL(url=url)])
         if user_id:
             person.add_fields([UserID(content=user_id)])
         if country or state or city or street or zip_code:
