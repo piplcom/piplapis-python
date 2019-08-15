@@ -443,7 +443,7 @@ class SearchAPIRequest(object):
         threading.Thread(target=target).start()
 
     def get_base_url(self):
-        protocol = "https" if self.use_https or (self.use_https is None and self.default_use_https) else "http"
+        protocol = "https"
         return self.BASE_URL.format(protocol)
 
 
