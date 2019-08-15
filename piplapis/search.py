@@ -105,12 +105,13 @@ class SearchAPIRequest(object):
     default_infer_persons = None
     default_match_requirements = None
     default_source_category_requirements = None
+    default_response_class = None
 
     @classmethod
     def set_default_settings(cls, api_key=None, minimum_probability=None, show_sources=None,
                              minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=False,
                              match_requirements=None, source_category_requirements=None, infer_persons=None,
-                             top_match=None):
+                             top_match=None, response_class=None):
         cls.default_api_key = api_key
         cls.default_minimum_probability = minimum_probability
         cls.default_show_sources = show_sources
@@ -122,6 +123,7 @@ class SearchAPIRequest(object):
         cls.default_match_requirements = match_requirements
         cls.default_source_category_requirements = source_category_requirements
         cls.default_infer_persons = infer_persons
+        cls.default_response_class = response_class
 
     def __init__(self, api_key=None, first_name=None, middle_name=None,
                  last_name=None, raw_name=None, email=None, phone=None, country_code=None,
@@ -129,7 +131,7 @@ class SearchAPIRequest(object):
                  street=None, zip_code=None, raw_address=None, from_age=None, to_age=None, person=None, url=None,
                  search_pointer=None, minimum_probability=None, show_sources=None,
                  minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=None,
-                 match_requirements=None, source_category_requirements=None, infer_persons=None, top_match=None):
+                 match_requirements=None, source_category_requirements=None, infer_persons=None, top_match=None, response_class=None):
         """Initiate a new request object with given query params.
         
         Each request must have at least one searchable parameter, meaning 
@@ -188,6 +190,8 @@ class SearchAPIRequest(object):
         :param source_category_requirements: str/unicode, a source category requirements criteria. This criteria defines
                                    what source categories must be present in an API response in order for it to be
                                    returned as a match. For example: "personal_profiles" or "personal_profiles or professional_and_business"
+        :param response_class: object, an object inheriting SearchAPIResponse and adding functionality beyond the basic
+                            response scope. This provides the option to override methods or just add them.
 
         Each of the arguments that should have a unicode value accepts both
         unicode objects and utf8 encoded str (will be decoded automatically).
@@ -232,6 +236,10 @@ class SearchAPIRequest(object):
         self.source_category_requirements = source_category_requirements or self.default_source_category_requirements
         self.use_https = use_https if use_https is not None else self.default_use_https
         self.infer_persons = infer_persons if infer_persons is not None else self.default_infer_persons
+
+        response_class = response_class or self.default_response_class
+        self.response_class = response_class if response_class and issubclass(response_class, SearchAPIResponse) \
+            else SearchAPIResponse
 
     def validate_query_params(self, strict=True):
         """Check if the request is valid and can be sent, raise ValueError if 
@@ -337,7 +345,7 @@ class SearchAPIRequest(object):
         try:
             response = urllib2.urlopen(request)
             json_response = response.read().decode()
-            search_response = SearchAPIResponse.from_json(json_response)
+            search_response = self.response_class.from_json(json_response)
             search_response._add_rate_limiting_headers(*self._get_quota_and_throttle_data(response.headers))
             return search_response
         except urllib2.HTTPError as e:
@@ -405,7 +413,7 @@ class SearchAPIRequest(object):
                 demo_usage_current, demo_usage_expiry, package_allotted, package_current, package_expiry)
 
     def send_async(self, callback, strict_validation=True):
-        """Sam  e as send() but in a non-blocking way.
+        """Same as send() but in a non-blocking way.
         
         use this method if you want to send the request asynchronously so your 
         program can do other things while waiting for the response.
@@ -639,14 +647,13 @@ class SearchAPIResponse(Serializable):
         if sources:
             sources = [Source.from_dict(source) for source in sources]
         possible_persons = [Person.from_dict(x) for x in d.get('possible_persons', [])]
-        return SearchAPIResponse(query=query, person=person, sources=sources,
-                                 possible_persons=possible_persons,
-                                 warnings_=warnings_, http_status_code=http_status_code,
-                                 visible_sources=visible_sources, available_sources=available_sources,
-                                 search_id=search_id, match_requirements=match_requirements,
-                                 available_data=available_data,
-                                 source_category_requirements=source_category_requirements,
-                                 persons_count=persons_count)
+        return cls(query=query, person=person, sources=sources,
+                   possible_persons=possible_persons, warnings_=warnings_,
+                   http_status_code=http_status_code, visible_sources=visible_sources,
+                   available_sources=available_sources, search_id=search_id,
+                   match_requirements=match_requirements, available_data=available_data,
+                   source_category_requirements=source_category_requirements,
+                   persons_count=persons_count)
 
     def to_dict(self):
         """Return a dict representation of the response."""
