@@ -294,7 +294,7 @@ class Address(Field):
 
     @property
     def is_sole_searchable(self):
-        return bool(self.raw or (self.city and self.street and self.house))
+        return bool(self.raw or (self.city and self.street or self.house))
 
     @property
     def is_searchable(self):

@@ -31,6 +31,9 @@ class APIError(Exception, Serializable):
         self.demo_usage_allotted = None  # Your permitted demo queries
         self.demo_usage_current = None  # The number of demo queries that you've already run
         self.demo_usage_expiry = None  # The expiry time of your demo usage
+        self.package_allotted = None  # The total number of matches defined on the key.
+        self.package_current = None  # The number of used matches.
+        self.package_expiry = None  # The date and time when the key and the remaining matches will expire.
     
     @property
     def is_user_error(self):
@@ -61,7 +64,8 @@ class APIError(Exception, Serializable):
                                    qps_current=None, qps_live_allotted=None, qps_live_current=None,
                                    qps_demo_allotted=None,
                                    qps_demo_current=None, demo_usage_allotted=None, demo_usage_current=None,
-                                   demo_usage_expiry=None):
+                                   demo_usage_expiry=None, package_allotted=None, package_current=None,
+                                   package_expiry=None):
         self.qps_allotted = qps_allotted
         self.qps_current = qps_current
         self.qps_live_allotted = qps_live_allotted
@@ -74,3 +78,6 @@ class APIError(Exception, Serializable):
         self.demo_usage_allotted = demo_usage_allotted
         self.demo_usage_current = demo_usage_current
         self.demo_usage_expiry = demo_usage_expiry
+        self.package_allotted = package_allotted
+        self.package_current = package_current
+        self.package_expiry = package_expiry
