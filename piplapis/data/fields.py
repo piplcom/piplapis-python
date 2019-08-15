@@ -300,7 +300,7 @@ class Address(Field):
     def is_searchable(self):
         """A bool value that indicates whether the address is a valid address
         to search by."""
-        return bool(self.raw or self.country or self.state or self.city)
+        return bool(self.raw or self.country or self.state or self.city or self.street)
 
     @property
     def is_valid_country(self):
