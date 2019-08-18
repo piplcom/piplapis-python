@@ -407,7 +407,7 @@ class SearchAPIRequest(object):
             package_current = int(headers.get('X-Package-Current'))
         if 'X-Package-Expiry' in headers:
             datetime_str = headers.get('X-Package-Expiry')
-            package_expiry = datetime.datetime.strftime(datetime_str, time_format).replace(tzinfo=pytz.utc)
+            package_expiry = datetime.datetime.strptime(datetime_str, time_format).replace(tzinfo=pytz.utc)
 
         return (quota_allotted, quota_current, quota_reset, qps_allotted, qps_current, qps_live_allotted,
                 qps_live_current, qps_demo_allotted, qps_demo_current, demo_usage_allotted,
