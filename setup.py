@@ -13,33 +13,31 @@
 # limitations under the License.
 
 import sys
-import distutils.core
 
+from setuptools import setup
 from piplapis import __version__
 
 
 py_version = sys.version_info[:2]
 if py_version[0] < 3 and py_version not in [(2, 6), (2, 7)]:
-    raise RuntimeError('Python 2.6 and up is required')
+    raise RuntimeError("Python 2.6 and up is required")
 
 
-distutils.core.setup(name='piplapis-python',
-                     version=__version__,
-                     author="Josh Liberty",
-                     author_email="josh.liberty@pipl.com",
-                     description="Client library for use with the Pipl search API",
-                     url="https://pipl.com/dev",
-                     license="http://www.apache.org/licenses/LICENSE-2.0",
-                     classifiers=[
-                         "Intended Audience :: Developers",
-                         "Operating System :: OS Independent",
-                         "Programming Language :: Python",
-                         "Programming Language :: Python :: 2",
-                         "Programming Language :: Python :: 3"
-                     ],
-                     install_requires=[
-                         'six>=1.9',
-                         'pytz'
-                     ],
-                     packages=['piplapis', 'piplapis.data'],
-                     )
+setup(
+    name="piplapis-python",
+    version=__version__,
+    author="Yuri Ritvin",
+    author_email="yuri.ritvin@pipl.com",
+    description="Client library for use with the Pipl search API",
+    url="https://pipl.com/api",
+    license="http://www.apache.org/licenses/LICENSE-2.0",
+    classifiers=[
+        "Intended Audience :: Developers",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 3",
+    ],
+    install_requires=["six>=1.9", "pytz"],
+    packages=["piplapis", "piplapis.data"],
+)
