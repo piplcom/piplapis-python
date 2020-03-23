@@ -283,7 +283,7 @@ class SearchAPIRequest(object):
     def url(self):
         """The URL of the request (str)."""
         query = self.get_search_query()
-        return self.get_base_url() + urllib.urlencode(query, doseq=True)
+        return self.get_base_url() + urlencode(query, doseq=True)
 
     def get_search_query(self):
         query = {"key": self.api_key}

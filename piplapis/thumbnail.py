@@ -3,7 +3,10 @@ This module contains wrapper code to the DEPRECATED paid thumbnail API v2.
 Please use Image.get_thumbnail_url instead, as it uses the newer, complementary thumbnail service.
 """
 import logging
-import urllib
+try:
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlencode
 
 from piplapis.data import Image
 from piplapis.data.utils import to_utf8
@@ -91,4 +94,4 @@ def generate_thumbnail_url(image_url, height, width, favicon_domain=None,
         'favicon_domain': to_utf8(favicon_domain or ''),
         'zoom_face': zoom_face,
     }
-    return BASE_URL + urllib.urlencode(query)
+    return BASE_URL + urlencode(query)
