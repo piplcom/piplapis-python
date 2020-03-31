@@ -247,7 +247,7 @@ class Name(Field):
         first = alpha_chars(self.first or u(''))
         last = alpha_chars(self.last or u(''))
         raw = alpha_chars(self.raw or u(''))
-        return (len(first) >= 2 and len(last) >= 2) or len(raw) >= 4
+        return len(first) >= 1 or len(last) >= 1 or len(raw) >= 1
 
 
 class Address(Field):
