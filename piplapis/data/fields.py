@@ -348,7 +348,7 @@ class Address(Field):
 class Phone(Field):
     """A phone number of a person."""
 
-    attributes = ('type',)
+    attributes = ('type', 'do_not_call')
     children = ('country_code', 'number', 'extension', 'raw', 'display', 'display_international')
     types_set = set(['mobile', 'home_phone', 'home_fax', 'work_phone',
                      'work_fax', 'pager'])
