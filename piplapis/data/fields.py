@@ -348,13 +348,13 @@ class Address(Field):
 class Phone(Field):
     """A phone number of a person."""
 
-    attributes = ('type',)
+    attributes = ('type', 'do_not_call')
     children = ('country_code', 'number', 'extension', 'raw', 'display', 'display_international')
     types_set = set(['mobile', 'home_phone', 'home_fax', 'work_phone',
                      'work_fax', 'pager'])
 
     def __init__(self, country_code=None, number=None, raw=None, extension=None, display=None,
-                 display_international=None, type_=None, *args, **kwargs):
+                 display_international=None, type_=None, do_not_call=None, *args, **kwargs):
         """`country_code`, `number` and `extension` should all be int/long.
         
         `type_` is one of Phone.types_set.
@@ -369,6 +369,7 @@ class Phone(Field):
         self.type = type_
         self._display = display
         self.display_international = display_international
+        self.do_not_call = do_not_call
 
     @property
     def is_searchable(self):
