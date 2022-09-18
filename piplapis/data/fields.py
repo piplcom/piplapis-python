@@ -174,7 +174,7 @@ class Gender(Field):
 
     @content.setter
     def content(self, value):
-        if value.lower() not in self.genders:
+        if value and value.lower() not in self.genders:
             logger.warn("{} is not a valid gender type. Setting to None.".format(value))
             value = None
         self._content = value
