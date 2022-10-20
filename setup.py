@@ -26,8 +26,8 @@ if py_version[0] < 3 and py_version not in [(2, 6), (2, 7)]:
 setup(
     name="piplapis-python",
     version=__version__,
-    author="Yuri Ritvin",
-    author_email="yuri.ritvin@pipl.com",
+    author="Pipl",
+    author_email="webstore-gcp@pipl.com",
     description="Client library for use with the Pipl search API",
     url="https://pipl.com/api",
     license="http://www.apache.org/licenses/LICENSE-2.0",
