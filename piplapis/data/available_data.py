@@ -5,11 +5,11 @@ class AvailableData(Serializable):
 
     children = ('basic', 'premium')
 
-    def __init__(self, basic=None, premium=None, *args, **kwargs):
+    def __init__(self, basic=None, premium=None, *args, **kwargs) -> None:
         self.basic = basic
         self.premium = premium
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         d = {}
         if self.basic is not None and type(self.basic) == FieldCount:
             d['basic'] = self.basic.to_dict()
@@ -32,12 +32,12 @@ class AvailableData(Serializable):
 class FieldCount(Serializable):
     children = ('addresses', 'ethnicities', 'emails', 'dobs', 'genders', 'user_ids', 'social_profiles',
                 'educations', 'jobs', 'images', 'languages', 'origin_countries', 'names', 'phones',
-                'mobile_phones', 'landline_phones', 'relationships', 'usernames')
+                'mobile_phones', 'voip_phones', 'landline_phones', 'relationships', 'usernames')
 
     def __init__(self, addresses=None, ethnicities=None, emails=None, dobs=None,
                  genders=None, user_ids=None, social_profiles=None, educations=None, jobs=None, images=None,
                  languages=None, origin_countries=None, names=None, phones=None, relationships=None,
-                 usernames=None, mobile_phones=None, landline_phones=None, *args, **kwargs):
+                 usernames=None, mobile_phones=None, voip_phones=None, landline_phones=None, *args, **kwargs) -> None:
         """
         A summary of the data within an API response
         :param addresses: int, the number of addresses
@@ -55,6 +55,7 @@ class FieldCount(Serializable):
         :param names: int, the number of names
         :param phones: int, the number of phones, both mobile and landline phones
         :param mobile_phones: int, the number of mobile phones
+        :param voip_phones: int, the number of voip phones
         :param landline_phones: int, the number of landline phones
         :param relationships: int, the number of relationships
         :param usernames: int, the number of usernames
@@ -69,6 +70,7 @@ class FieldCount(Serializable):
         self.ethnicities = ethnicities
         self.phones = phones
         self.mobile_phones = mobile_phones
+        self.voip_phones = voip_phones
         self.landline_phones = landline_phones
         self.origin_countries = origin_countries
         self.ethnicities = ethnicities
@@ -80,17 +82,18 @@ class FieldCount(Serializable):
         self.names = names
         self.social_profiles = social_profiles
 
-    def to_dict(self):
-        d = {}
-        for child in self.children:
-            if getattr(self, child):
-                d[child] = getattr(self, child)
-        return d
+    def to_dict(self) -> dict:
+        return {
+            child: getattr(self, child)
+            for child in self.children
+            if getattr(self, child)
+        }
 
     @classmethod
-    def from_dict(cls, d):
-        kwargs = {}
-        for key, value in d.items():
-            if key in cls.children and type(value) == int:
-                kwargs[key] = value
+    def from_dict(cls, d: dict):
+        kwargs = {
+            key: value
+            for key, value in d.items()
+            if key in cls.children and type(value) == int
+        }
         return cls(**kwargs)

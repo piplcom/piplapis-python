@@ -351,7 +351,7 @@ class Phone(Field):
     attributes = ('type', 'do_not_call')
     children = ('country_code', 'number', 'extension', 'raw', 'display', 'display_international')
     types_set = set(['mobile', 'home_phone', 'home_fax', 'work_phone',
-                     'work_fax', 'pager'])
+                     'work_fax', 'pager', 'voip'])
 
     def __init__(self, country_code=None, number=None, raw=None, extension=None, display=None,
                  display_international=None, type_=None, do_not_call=None, *args, **kwargs):
@@ -392,13 +392,13 @@ class Email(Field):
     
     """
 
-    attributes = ('type', 'disposable', 'email_provider')
+    attributes = ('type', 'disposable', 'email_provider', 'commercial_domain')
     children = ('address', 'address_md5')
     types_set = set(['personal', 'work'])
     re_email = re.compile("^[a-zA-Z0-9'._%\-+]+@[a-zA-Z0-9._%\-]+\.[a-zA-Z]{2,24}$")
 
     def __init__(self, address=None, address_md5=None, type_=None,
-                 disposable=None, email_provider=None, *args, **kwargs):
+                 disposable=None, email_provider=None, commercial_domain=None, *args, **kwargs):
         """`address`, `address_md5`, `type_` should be unicode objects or utf8 
         encoded strs (will be decoded automatically).
         
@@ -417,6 +417,7 @@ class Email(Field):
         self.type = type_
         self.email_provider = email_provider
         self.disposable = disposable
+        self.commercial_domain = commercial_domain
 
     @property
     def is_valid_email(self):
