@@ -90,7 +90,7 @@ class SearchAPIRequest(object):
     """
 
     HEADERS = {'User-Agent': 'piplapis/python/%s' % piplapis.__version__}
-    BASE_URL = '{}://qa-api.pipl.pro/apis/search/?'
+    BASE_URL = '{}://api.pipl.com/search/?'
 
     # The following are default settings for all request objects
     # You can set them once instead of passing them to the constructor every time
