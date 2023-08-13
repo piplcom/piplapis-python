@@ -506,7 +506,7 @@ class Vehicle(Field):
         color = f", {self.color.title()}" if self.color else ""
         vehicle_type = f"({self.vehicle_type.title()})" if self.vehicle_type else ""
         type_and_color = f"{vehicle_type}{color} " if vehicle_type or color else ""
-        hyphen = " -  " if year or make_and_model or vehicle_type or color else ""
+        hyphen = "- " if year or make_and_model or vehicle_type or color else ""
 
         return f"{year}{make_and_model}{type_and_color}{hyphen}VIN {vin}"
 

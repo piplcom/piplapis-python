@@ -17,6 +17,7 @@ import json
 
 import datetime
 import logging
+import os
 
 import pytz as pytz
 
@@ -90,7 +91,8 @@ class SearchAPIRequest(object):
     """
 
     HEADERS = {'User-Agent': 'piplapis/python/%s' % piplapis.__version__}
-    BASE_URL = '{}://api.pipl.com/search/?'
+    DEFAULT_BASE_URL = 'https://api.pipl.com/search/?'
+    BASE_URL = os.environ.get('PIPL_SEARCH_API_URL', DEFAULT_BASE_URL)
 
     # The following are default settings for all request objects
     # You can set them once instead of passing them to the constructor every time
@@ -446,8 +448,7 @@ class SearchAPIRequest(object):
         threading.Thread(target=target).start()
 
     def get_base_url(self):
-        protocol = "https"
-        return self.BASE_URL.format(protocol)
+        return self.BASE_URL
 
 
 class SearchAPIResponse(Serializable):
