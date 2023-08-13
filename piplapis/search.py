@@ -129,7 +129,7 @@ class SearchAPIRequest(object):
                  last_name=None, raw_name=None, email=None, phone=None, country_code=None,
                  raw_phone=None, username=None, user_id=None, country=None, state=None, city=None, house=None,
                  street=None, zip_code=None, raw_address=None, from_age=None, to_age=None, person=None, url=None,
-                 search_pointer=None, minimum_probability=None, show_sources=None,
+                 vin=None, search_pointer=None, minimum_probability=None, show_sources=None,
                  minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=None,
                  match_requirements=None, source_category_requirements=None, infer_persons=None, top_match=None, response_class=None):
         """Initiate a new request object with given query params.
@@ -218,6 +218,8 @@ class SearchAPIRequest(object):
             person.add_fields([address])
         if raw_address:
             person.add_fields([Address(raw=raw_address)])
+        if vin:
+            person.add_fields([Vehicle(vin=vin)])
         if from_age is not None or to_age is not None:
             dob = DOB.from_age_range(from_age or 0, to_age or 1000)
             person.add_fields([dob])

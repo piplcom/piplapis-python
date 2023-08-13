@@ -13,7 +13,7 @@ from six import u
 
 __all__ = ['Name', 'Address', 'Phone', 'Email', 'Job', 'Education', 'Image',
            'Username', 'UserID', 'DOB', 'URL', 'Tag',
-           'DateRange', 'Ethnicity', 'Language', 'OriginCountry', 'Gender']
+           'DateRange', 'Ethnicity', 'Language', 'OriginCountry', 'Gender', 'Vehicle']
 
 logger = logging.getLogger(__name__)
 
@@ -348,13 +348,12 @@ class Address(Field):
 class Phone(Field):
     """A phone number of a person."""
 
-    attributes = ('type', 'do_not_call')
+    attributes = ('type', 'do_not_call', 'voip')
     children = ('country_code', 'number', 'extension', 'raw', 'display', 'display_international')
-    types_set = set(['mobile', 'home_phone', 'home_fax', 'work_phone',
-                     'work_fax', 'pager'])
+    types_set = set(['mobile', 'home_phone', 'home_fax', 'work_phone', 'work_fax', 'pager', 'voip'])
 
     def __init__(self, country_code=None, number=None, raw=None, extension=None, display=None,
-                 display_international=None, type_=None, do_not_call=None, *args, **kwargs):
+                 display_international=None, type_=None, do_not_call=None, voip=None, *args, **kwargs):
         """`country_code`, `number` and `extension` should all be int/long.
         
         `type_` is one of Phone.types_set.
@@ -370,6 +369,7 @@ class Phone(Field):
         self._display = display
         self.display_international = display_international
         self.do_not_call = do_not_call
+        self.voip = voip
 
     @property
     def is_searchable(self):
@@ -466,6 +466,94 @@ class Email(Field):
     @property
     def display(self):
         return self.address or self.address_md5
+
+
+class Vehicle(Field):
+    """
+        Vehicle information.
+    """
+
+    attributes = ('is_vin_valid',)
+    children = ('vin', 'year', 'make', 'model', 'color', 'vehicle_type')
+
+    def __init__(
+            self,
+            vin=None,
+            year=None,
+            make=None,
+            model=None,
+            color=None,
+            vehicle_type=None,
+            is_vin_valid=True,
+            *args, **kwargs):
+
+        Field.__init__(self, *args, **kwargs)
+        self.vin = vin
+        self.year = year
+        self.make = make
+        self.model = model
+        self.color = color
+        self.is_vin_valid = is_vin_valid
+        self.vehicle_type = vehicle_type
+
+    @property
+    def display(self) -> str:
+        make = f"{self.make.title()} " if self.make else ""
+        model = f"{self.model.title()} " if self.model else ""
+        make_and_model = f"{make}{model}" if make or model else ""
+        year = f"{self.year} " if self.year else ""
+        vin = self.vin or ""
+        color = f", {self.color.title()}" if self.color else ""
+        vehicle_type = f"({self.vehicle_type.title()})" if self.vehicle_type else ""
+        type_and_color = f"{vehicle_type}{color} " if vehicle_type or color else ""
+        hyphen = " -  " if year or make_and_model or vehicle_type or color else ""
+
+        return f"{year}{make_and_model}{type_and_color}{hyphen}VIN {vin}"
+
+    @staticmethod
+    def is_vin_valid(vin: str) -> bool:
+        vin_valid = True
+        if vin:
+            vin_valid = (
+                    len(vin) == 17
+                    and not set(vin.lower()).intersection({"i", "o", "q"})
+                    and vin.lower()[9] not in ("u", "z", "0")
+                    and vin.isalnum()
+            )
+            if vin_valid:
+                vin_valid = Vehicle.validate_vin_checksum(vin)
+        return vin_valid
+
+    @staticmethod
+    def validate_vin_checksum(vin: str) -> bool:
+        vin = vin.lower()
+        check_digit = vin[8]
+        replace_map = {
+            "1": ["a", "j"],
+            "2": ["b", "k", "s"],
+            "3": ["c", "l", "t"],
+            "4": ["d", "m", "u"],
+            "5": ["e", "n", "v"],
+            "6": ["f", "w"],
+            "7": ["g", "p", "x"],
+            "8": ["h", "y"],
+            "9": ["r", "z"],
+        }
+        positional_weights = [8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2]
+        for digit, replacements in replace_map.items():
+            for c in replacements:
+                vin = vin.replace(c, digit)
+        checksum = sum(int(num) * positional_weights[i] for i, num in enumerate(vin) if i != 8)
+        checksum %= 11
+        if checksum == 10:
+            checksum = 'x'
+        return str(checksum) == check_digit
+
+    @property
+    def is_searchable(self):
+        """A bool value that indicates whether it's possible to search using the
+        data in this vehicle field."""
+        return self.is_vin_valid
 
 
 class Job(Field):
