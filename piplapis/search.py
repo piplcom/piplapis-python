@@ -91,7 +91,8 @@ class SearchAPIRequest(object):
     """
 
     HEADERS = {'User-Agent': 'piplapis/python/%s' % piplapis.__version__}
-    DEFAULT_BASE_URL = 'https://api.pipl.com/search/?'
+    DEFAULT_API_VERSION = 'v5'
+    DEFAULT_BASE_URL = f'https://api.pipl.com/search/'
     BASE_URL = os.environ.get('PIPL_SEARCH_API_URL', DEFAULT_BASE_URL)
 
     # The following are default settings for all request objects
@@ -113,7 +114,7 @@ class SearchAPIRequest(object):
     def set_default_settings(cls, api_key=None, minimum_probability=None, show_sources=None,
                              minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=False,
                              match_requirements=None, source_category_requirements=None, infer_persons=None,
-                             top_match=None, response_class=None):
+                             top_match=None, response_class=None, api_version=None):
         cls.default_api_key = api_key
         cls.default_minimum_probability = minimum_probability
         cls.default_show_sources = show_sources
@@ -126,6 +127,7 @@ class SearchAPIRequest(object):
         cls.default_source_category_requirements = source_category_requirements
         cls.default_infer_persons = infer_persons
         cls.default_response_class = response_class
+        cls.default_api_version = api_version or SearchAPIRequest.DEFAULT_API_VERSION
 
     def __init__(self, api_key=None, first_name=None, middle_name=None,
                  last_name=None, raw_name=None, email=None, phone=None, country_code=None,
@@ -133,7 +135,8 @@ class SearchAPIRequest(object):
                  street=None, zip_code=None, raw_address=None, from_age=None, to_age=None, person=None, url=None,
                  vin=None, search_pointer=None, minimum_probability=None, show_sources=None,
                  minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=None,
-                 match_requirements=None, source_category_requirements=None, infer_persons=None, top_match=None, response_class=None):
+                 match_requirements=None, source_category_requirements=None, infer_persons=None, top_match=None,
+                 response_class=None, api_version=None):
         """Initiate a new request object with given query params.
         
         Each request must have at least one searchable parameter, meaning 
@@ -240,6 +243,7 @@ class SearchAPIRequest(object):
         self.source_category_requirements = source_category_requirements or self.default_source_category_requirements
         self.use_https = use_https if use_https is not None else self.default_use_https
         self.infer_persons = infer_persons if infer_persons is not None else self.default_infer_persons
+        self.api_version = api_version or self.DEFAULT_API_VERSION
 
         response_class = response_class or self.default_response_class
         self.response_class = response_class if response_class and issubclass(response_class, SearchAPIResponse) \
@@ -448,7 +452,7 @@ class SearchAPIRequest(object):
         threading.Thread(target=target).start()
 
     def get_base_url(self):
-        return self.BASE_URL
+        return f"{self.BASE_URL}{self.api_version}/?"
 
 
 class SearchAPIResponse(Serializable):
