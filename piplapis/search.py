@@ -18,6 +18,7 @@ import json
 import datetime
 import logging
 import os
+from _decimal import Decimal
 
 import pytz as pytz
 
@@ -91,7 +92,7 @@ class SearchAPIRequest(object):
     """
 
     HEADERS = {'User-Agent': 'piplapis/python/%s' % piplapis.__version__}
-    DEFAULT_API_VERSION = 'v5'
+    DEFAULT_API_VERSION = 5
     DEFAULT_BASE_URL = f'https://api.pipl.com/search/'
     BASE_URL = os.environ.get('PIPL_SEARCH_API_URL', DEFAULT_BASE_URL)
 
@@ -197,6 +198,7 @@ class SearchAPIRequest(object):
                                    returned as a match. For example: "personal_profiles" or "personal_profiles or professional_and_business"
         :param response_class: object, an object inheriting SearchAPIResponse and adding functionality beyond the basic
                             response scope. This provides the option to override methods or just add them.
+        :param api_version: number, the API version to use. Defaults to 5.
 
         Each of the arguments that should have a unicode value accepts both
         unicode objects and utf8 encoded str (will be decoded automatically).
@@ -452,7 +454,8 @@ class SearchAPIRequest(object):
         threading.Thread(target=target).start()
 
     def get_base_url(self):
-        return f"{self.BASE_URL}{self.api_version}/?"
+        version = Decimal(str(self.api_version)).normalize()
+        return f"{self.BASE_URL}v{version}/?"
 
 
 class SearchAPIResponse(Serializable):
