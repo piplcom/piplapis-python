@@ -473,7 +473,6 @@ class Vehicle(Field):
         Vehicle information.
     """
 
-    attributes = ('is_vin_valid',)
     children = ('vin', 'year', 'make', 'model', 'color', 'vehicle_type')
 
     def __init__(
@@ -484,7 +483,6 @@ class Vehicle(Field):
             model=None,
             color=None,
             vehicle_type=None,
-            is_vin_valid=True,
             *args, **kwargs):
 
         Field.__init__(self, *args, **kwargs)
@@ -493,7 +491,6 @@ class Vehicle(Field):
         self.make = make
         self.model = model
         self.color = color
-        self.is_vin_valid = is_vin_valid
         self.vehicle_type = vehicle_type
 
     @property
@@ -510,8 +507,9 @@ class Vehicle(Field):
 
         return f"{year}{make_and_model}{type_and_color}{hyphen}VIN {vin}"
 
-    @staticmethod
-    def is_vin_valid(vin: str) -> bool:
+    def validate_vin(self, vin: str) -> bool:
+        """A bool value that indicates whether it's possible to search using the
+        data in this vehicle field."""
         vin_valid = True
         if vin:
             vin_valid = (
@@ -521,7 +519,7 @@ class Vehicle(Field):
                     and vin.isalnum()
             )
             if vin_valid:
-                vin_valid = Vehicle.validate_vin_checksum(vin)
+                vin_valid = self.validate_vin_checksum(vin)
         return vin_valid
 
     @staticmethod
@@ -550,10 +548,8 @@ class Vehicle(Field):
         return str(checksum) == check_digit
 
     @property
-    def is_searchable(self):
-        """A bool value that indicates whether it's possible to search using the
-        data in this vehicle field."""
-        return self.is_vin_valid
+    def is_searchable(self) -> bool:
+        return self.validate_vin(self.vin)
 
 
 class Job(Field):
