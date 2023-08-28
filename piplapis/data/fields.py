@@ -473,7 +473,6 @@ class Vehicle(Field):
         Vehicle information.
     """
 
-    attributes = ('is_vin_valid',)
     children = ('vin', 'year', 'make', 'model', 'color', 'vehicle_type')
 
     def __init__(
@@ -484,7 +483,6 @@ class Vehicle(Field):
             model=None,
             color=None,
             vehicle_type=None,
-            is_vin_valid=True,
             *args, **kwargs):
 
         Field.__init__(self, *args, **kwargs)
@@ -493,7 +491,6 @@ class Vehicle(Field):
         self.make = make
         self.model = model
         self.color = color
-        self.is_vin_valid = is_vin_valid
         self.vehicle_type = vehicle_type
 
     @property
