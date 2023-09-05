@@ -18,7 +18,6 @@ import json
 import datetime
 import logging
 import os
-from _decimal import Decimal
 
 import pytz as pytz
 
@@ -93,7 +92,7 @@ class SearchAPIRequest(object):
 
     HEADERS = {'User-Agent': 'piplapis/python/%s' % piplapis.__version__}
     DEFAULT_API_VERSION = 5
-    DEFAULT_BASE_URL = f'https://api.pipl.com/search/'
+    DEFAULT_BASE_URL = 'https://api.pipl.com/search/'
     BASE_URL = os.environ.get('PIPL_SEARCH_API_URL', DEFAULT_BASE_URL)
 
     # The following are default settings for all request objects
@@ -245,7 +244,7 @@ class SearchAPIRequest(object):
         self.source_category_requirements = source_category_requirements or self.default_source_category_requirements
         self.use_https = use_https if use_https is not None else self.default_use_https
         self.infer_persons = infer_persons if infer_persons is not None else self.default_infer_persons
-        self.api_version = api_version or self.DEFAULT_API_VERSION
+        self.api_version = self._normalize_api_version(api_version or self.DEFAULT_API_VERSION)
 
         response_class = response_class or self.default_response_class
         self.response_class = response_class if response_class and issubclass(response_class, SearchAPIResponse) \
@@ -453,9 +452,11 @@ class SearchAPIRequest(object):
 
         threading.Thread(target=target).start()
 
+    def _normalize_api_version(self, api_version):
+        return str(api_version).rstrip(".0")
+
     def get_base_url(self):
-        version = Decimal(str(self.api_version)).normalize()
-        return f"{self.BASE_URL}v{version}/?"
+        return f"{self.BASE_URL}v{self.api_version}/?"
 
 
 class SearchAPIResponse(Serializable):

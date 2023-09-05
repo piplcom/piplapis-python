@@ -494,7 +494,7 @@ class Vehicle(Field):
         self.vehicle_type = vehicle_type
 
     @property
-    def display(self) -> str:
+    def display(self):
         make = f"{self.make.title()} " if self.make else ""
         model = f"{self.model.title()} " if self.model else ""
         make_and_model = f"{make}{model}" if make or model else ""
@@ -507,7 +507,7 @@ class Vehicle(Field):
 
         return f"{year}{make_and_model}{type_and_color}{hyphen}VIN {vin}"
 
-    def validate_vin(self, vin: str) -> bool:
+    def validate_vin(self, vin):
         """A bool value that indicates whether it's possible to search using the
         data in this vehicle field."""
         vin_valid = True
@@ -523,7 +523,7 @@ class Vehicle(Field):
         return vin_valid
 
     @staticmethod
-    def validate_vin_checksum(vin: str) -> bool:
+    def validate_vin_checksum(vin):
         vin = vin.lower()
         check_digit = vin[8]
         replace_map = {
@@ -548,7 +548,7 @@ class Vehicle(Field):
         return str(checksum) == check_digit
 
     @property
-    def is_searchable(self) -> bool:
+    def is_searchable(self):
         return self.validate_vin(self.vin)
 
 
