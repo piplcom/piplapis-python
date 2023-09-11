@@ -408,6 +408,7 @@ class Person(Serializable, FieldsContainer):
                                     filter(filter_func, self.user_ids),
                                     filter(filter_func, self.urls),
                                     filter(filter_func, self.addresses),
+                                    filter(filter_func, self.vehicles),
                                     filter(filter_func, [x for x in [self.dob] if x])))
 
     @classmethod
