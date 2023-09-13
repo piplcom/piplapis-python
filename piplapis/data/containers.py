@@ -33,6 +33,7 @@ class FieldsContainer(object):
         self.tags = []
         self.dob = None
         self.gender = None
+        self.vehicles = []
         self.add_fields(fields or [])
 
     def add_fields(self, fields):
@@ -212,7 +213,8 @@ class Source(Serializable, FieldsContainer):
         Ethnicity: 'ethnicities',
         OriginCountry: 'origin_countries',
         Language: 'languages',
-        Tag: 'tags'
+        Tag: 'tags',
+        Vehicle: 'vehicles'
     }
 
     singular_fields = {
@@ -353,7 +355,8 @@ class Person(Serializable, FieldsContainer):
         Relationship: 'relationships',
         Ethnicity: 'ethnicities',
         OriginCountry: 'origin_countries',
-        Language: 'languages'
+        Language: 'languages',
+        Vehicle: 'vehicles'
     }
 
     singular_fields = {
@@ -386,7 +389,8 @@ class Person(Serializable, FieldsContainer):
                     list(filter(filter_func, self.user_ids)) or
                     list(filter(filter_func, self.emails)) or
                     list(filter(filter_func, self.phones)) or
-                    list(filter(filter_func, self.usernames)))
+                    list(filter(filter_func, self.usernames)) or
+                    list(filter(filter_func, self.vehicles)))
 
     @property
     def unsearchable_fields(self):
@@ -404,6 +408,7 @@ class Person(Serializable, FieldsContainer):
                                     filter(filter_func, self.user_ids),
                                     filter(filter_func, self.urls),
                                     filter(filter_func, self.addresses),
+                                    filter(filter_func, self.vehicles),
                                     filter(filter_func, [x for x in [self.dob] if x])))
 
     @classmethod

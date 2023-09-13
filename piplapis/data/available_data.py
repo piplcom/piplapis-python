@@ -30,14 +30,15 @@ class AvailableData(Serializable):
 
 
 class FieldCount(Serializable):
-    children = ('addresses', 'ethnicities', 'emails', 'dobs', 'genders', 'user_ids', 'social_profiles',
-                'educations', 'jobs', 'images', 'languages', 'origin_countries', 'names', 'phones',
-                'mobile_phones', 'landline_phones', 'relationships', 'usernames')
+    children = ('addresses', 'ethnicities', 'emails', 'personal_emails', 'work_emails', 'dobs', 'genders', 'user_ids',
+                'social_profiles', 'educations', 'jobs', 'images', 'languages', 'origin_countries', 'names', 'phones',
+                'mobile_phones', 'landline_phones', 'voip_phones', 'relationships', 'usernames', 'vehicles')
 
-    def __init__(self, addresses=None, ethnicities=None, emails=None, dobs=None,
+    def __init__(self, addresses=None, ethnicities=None, emails=None, personal_emails=None, work_emails=None, dobs=None,
                  genders=None, user_ids=None, social_profiles=None, educations=None, jobs=None, images=None,
                  languages=None, origin_countries=None, names=None, phones=None, relationships=None,
-                 usernames=None, mobile_phones=None, landline_phones=None, *args, **kwargs):
+                 usernames=None, mobile_phones=None, landline_phones=None, voip_phones=None, vehicles=None,
+                 *args, **kwargs):
         """
         A summary of the data within an API response
         :param addresses: int, the number of addresses
@@ -70,15 +71,19 @@ class FieldCount(Serializable):
         self.phones = phones
         self.mobile_phones = mobile_phones
         self.landline_phones = landline_phones
+        self.voip_phones = voip_phones
         self.origin_countries = origin_countries
         self.ethnicities = ethnicities
         self.usernames = usernames
         self.languages = languages
         self.emails = emails
+        self.personal_emails = personal_emails
+        self.work_emails = work_emails
         self.user_ids = user_ids
         self.relationships = relationships
         self.names = names
         self.social_profiles = social_profiles
+        self.vehicles = vehicles
 
     def to_dict(self):
         d = {}

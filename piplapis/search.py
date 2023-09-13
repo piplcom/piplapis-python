@@ -17,6 +17,7 @@ import json
 
 import datetime
 import logging
+import os
 
 import pytz as pytz
 
@@ -90,7 +91,9 @@ class SearchAPIRequest(object):
     """
 
     HEADERS = {'User-Agent': 'piplapis/python/%s' % piplapis.__version__}
-    BASE_URL = '{}://api.pipl.com/search/?'
+    DEFAULT_API_VERSION = 5
+    DEFAULT_BASE_URL = 'https://api.pipl.com/search/'
+    BASE_URL = os.environ.get('PIPL_SEARCH_API_URL', DEFAULT_BASE_URL)
 
     # The following are default settings for all request objects
     # You can set them once instead of passing them to the constructor every time
@@ -111,7 +114,7 @@ class SearchAPIRequest(object):
     def set_default_settings(cls, api_key=None, minimum_probability=None, show_sources=None,
                              minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=False,
                              match_requirements=None, source_category_requirements=None, infer_persons=None,
-                             top_match=None, response_class=None):
+                             top_match=None, response_class=None, api_version=None):
         cls.default_api_key = api_key
         cls.default_minimum_probability = minimum_probability
         cls.default_show_sources = show_sources
@@ -124,14 +127,16 @@ class SearchAPIRequest(object):
         cls.default_source_category_requirements = source_category_requirements
         cls.default_infer_persons = infer_persons
         cls.default_response_class = response_class
+        cls.default_api_version = api_version or SearchAPIRequest.DEFAULT_API_VERSION
 
     def __init__(self, api_key=None, first_name=None, middle_name=None,
                  last_name=None, raw_name=None, email=None, phone=None, country_code=None,
                  raw_phone=None, username=None, user_id=None, country=None, state=None, city=None, house=None,
                  street=None, zip_code=None, raw_address=None, from_age=None, to_age=None, person=None, url=None,
-                 search_pointer=None, minimum_probability=None, show_sources=None,
+                 vin=None, search_pointer=None, minimum_probability=None, show_sources=None,
                  minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=None,
-                 match_requirements=None, source_category_requirements=None, infer_persons=None, top_match=None, response_class=None):
+                 match_requirements=None, source_category_requirements=None, infer_persons=None, top_match=None,
+                 response_class=None, api_version=None):
         """Initiate a new request object with given query params.
         
         Each request must have at least one searchable parameter, meaning 
@@ -192,6 +197,7 @@ class SearchAPIRequest(object):
                                    returned as a match. For example: "personal_profiles" or "personal_profiles or professional_and_business"
         :param response_class: object, an object inheriting SearchAPIResponse and adding functionality beyond the basic
                             response scope. This provides the option to override methods or just add them.
+        :param api_version: number, the API version to use. Defaults to 5.
 
         Each of the arguments that should have a unicode value accepts both
         unicode objects and utf8 encoded str (will be decoded automatically).
@@ -218,6 +224,8 @@ class SearchAPIRequest(object):
             person.add_fields([address])
         if raw_address:
             person.add_fields([Address(raw=raw_address)])
+        if vin:
+            person.add_fields([Vehicle(vin=vin)])
         if from_age is not None or to_age is not None:
             dob = DOB.from_age_range(from_age or 0, to_age or 1000)
             person.add_fields([dob])
@@ -236,6 +244,7 @@ class SearchAPIRequest(object):
         self.source_category_requirements = source_category_requirements or self.default_source_category_requirements
         self.use_https = use_https if use_https is not None else self.default_use_https
         self.infer_persons = infer_persons if infer_persons is not None else self.default_infer_persons
+        self.api_version = self._normalize_api_version(api_version or self.DEFAULT_API_VERSION)
 
         response_class = response_class or self.default_response_class
         self.response_class = response_class if response_class and issubclass(response_class, SearchAPIResponse) \
@@ -443,9 +452,11 @@ class SearchAPIRequest(object):
 
         threading.Thread(target=target).start()
 
+    def _normalize_api_version(self, api_version):
+        return str(api_version).rstrip(".0")
+
     def get_base_url(self):
-        protocol = "https"
-        return self.BASE_URL.format(protocol)
+        return f"{self.BASE_URL}v{self.api_version}/?"
 
 
 class SearchAPIResponse(Serializable):
