@@ -9,8 +9,7 @@ This is a Python client library for easily integrating Pipl's APIs into your app
 Library Requirements
 --------------------
 
-* Minimum python version: 2.6
-* Python 3.x is supported
+* From python SDK version 5.3.0 and above, Python 3.8 and above is supported 
 
 Installation
 ------------
