@@ -27,7 +27,7 @@ setup(
     name="piplapis-python",
     version=__version__,
     author="Pipl",
-    author_email="webstore-gcp@pipl.com",
+    author_email="support@pipl.com",
     description="Client library for use with the Pipl search API",
     url="https://pipl.com/api",
     license="http://www.apache.org/licenses/LICENSE-2.0",
