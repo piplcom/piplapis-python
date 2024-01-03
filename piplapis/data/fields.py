@@ -11,9 +11,26 @@ except ImportError:
 
 from six import u
 
-__all__ = ['Name', 'Address', 'Phone', 'Email', 'Job', 'Education', 'Image',
-           'Username', 'UserID', 'DOB', 'URL', 'Tag',
-           'DateRange', 'Ethnicity', 'Language', 'OriginCountry', 'Gender', 'Vehicle']
+__all__ = [
+    "Name",
+    "Address",
+    "Phone",
+    "Email",
+    "Job",
+    "Education",
+    "Image",
+    "Username",
+    "UserID",
+    "DOB",
+    "URL",
+    "Tag",
+    "DateRange",
+    "Ethnicity",
+    "Language",
+    "OriginCountry",
+    "Gender",
+    "Vehicle",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -23,11 +40,19 @@ class Field(Serializable):
     """Base class of all data fields, made only for inheritance."""
 
     attributes = ()
-    base_attributes = ('valid_since', 'inferred', 'last_seen', 'current')
-    children = ('content',)
+    base_attributes = ("valid_since", "inferred", "last_seen", "current")
+    children = ("content",)
     types_set = set([])
 
-    def __init__(self, valid_since=None, inferred=None, last_seen=None, current=None, *args, **kwargs):
+    def __init__(
+        self,
+        valid_since=None,
+        inferred=None,
+        last_seen=None,
+        current=None,
+        *args,
+        **kwargs,
+    ):
         """
         Constructor for a basic Field object. This should never be called directly.
         :param valid_since: date, the date in which this field first appeared to Pipl's crawlers.
@@ -42,71 +67,88 @@ class Field(Serializable):
         self.current = current
 
     def __setattr__(self, attr, value):
-        """Extend the default object.__setattr___ and make sure that str values 
-        are converted to unicode and that assigning to the `type` attribute is 
+        """Extend the default object.__setattr___ and make sure that str values
+        are converted to unicode and that assigning to the `type` attribute is
         only from the allowed values.
-        
-        Setting an str value for an attribute is impossible, if an str is 
+
+        Setting an str value for an attribute is impossible, if an str is
         provided then it must be in utf8 encoding and it will be automatically
         converted to a unicode object.
-        
+
         Example:
         >>> from piplapis.data import Name
         >>> name = Name(first='clark')
         >>> name.first
         'clark'
-        
+
         """
         if six.PY2 and isinstance(value, str):
             try:
-                value = value.decode('utf8')
+                value = value.decode("utf8")
             except UnicodeDecodeError:
-                raise ValueError('Tried to assign a non utf8 string to ' + attr)
-        if attr == 'type':
+                raise ValueError("Tried to assign a non utf8 string to " + attr)
+        if attr == "type":
             try:
                 self.validate_type(value)
             except ValueError:
-                logger.warn("{} is not a valid type of {}. Setting to None.".format(value, type(self)))
+                logger.warn(
+                    "{} is not a valid type of {}. Setting to None.".format(
+                        value, type(self)
+                    )
+                )
                 value = None
         object.__setattr__(self, attr, value)
 
     def __str__(self):
         """Return the str representation of the object (encoded with utf8)."""
-        if hasattr(self, 'display') and getattr(self, 'display'):
+        if hasattr(self, "display") and getattr(self, "display"):
             return self.display
         else:
             return ""
 
     @property
     def display(self):
-        return self._display if hasattr(self, '_display') and getattr(self, '_display') else None
+        return (
+            self._display
+            if hasattr(self, "_display") and getattr(self, "_display")
+            else None
+        )
 
     def __repr__(self):
         """Return a representation of the object (a valid value for eval())."""
         attrs = list(self.base_attributes + self.attributes + self.children)
-        attrs_values = [(attr, getattr(self, attr)) for attr in attrs if not attr.startswith("display")]
-        attrs_values = [(attr, value) if attr != 'type' else ('type_', value)
-                        for attr, value in attrs_values]
-        args = ['%s=%s' % (attr, repr(value))
-                for attr, value in attrs_values if value is not None]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(args))
+        attrs_values = [
+            (attr, getattr(self, attr))
+            for attr in attrs
+            if not attr.startswith("display")
+        ]
+        attrs_values = [
+            (attr, value) if attr != "type" else ("type_", value)
+            for attr, value in attrs_values
+        ]
+        args = [
+            "%s=%s" % (attr, repr(value))
+            for attr, value in attrs_values
+            if value is not None
+        ]
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(args))
 
     def __eq__(self, other):
-        """Bool, indicates whether `self` and `other` have exactly the same 
+        """Bool, indicates whether `self` and `other` have exactly the same
         data."""
         return repr(self) == repr(other)
 
     def validate_type(self, type_):
-        """Take an str/unicode `type_` and raise a ValueError if it's not 
+        """Take an str/unicode `type_` and raise a ValueError if it's not
         a valid type for the object.
-        
-        A valid type for a field is a value from the types_set attribute of 
-        that field's class. 
+
+        A valid type for a field is a value from the types_set attribute of
+        that field's class.
         :param type_: str or unicode, the type to validate.
 
         """
         if type_ is not None and type_ not in self.types_set:
-            raise ValueError('Invalid type for %s:%s' % (self.__class__, type_))
+            raise ValueError("Invalid type for %s:%s" % (self.__class__, type_))
 
     @classmethod
     def from_dict(cls, d):
@@ -115,15 +157,15 @@ class Field(Serializable):
         """
         kwargs = {}
         for key, val in d.items():
-            if key.startswith('@'):
+            if key.startswith("@"):
                 key = key[1:]
-            if key == 'type':
-                key = 'type_'
-            elif key == 'valid_since':
+            if key == "type":
+                key = "type_"
+            elif key == "valid_since":
                 val = str_to_datetime(val)
-            elif key == 'last_seen':
+            elif key == "last_seen":
                 val = str_to_datetime(val)
-            elif key == 'date_range':
+            elif key == "date_range":
                 val = DateRange.from_dict(val)
             kwargs[key] = val
         return cls(**kwargs)
@@ -131,7 +173,11 @@ class Field(Serializable):
     def to_dict(self):
         """Return a dict representation of the field."""
         d = {}
-        for attr_list, prefix in [(self.base_attributes, '@'), (self.attributes, '@'), (self.children, '')]:
+        for attr_list, prefix in [
+            (self.base_attributes, "@"),
+            (self.attributes, "@"),
+            (self.children, ""),
+        ]:
             for attr in attr_list:
                 value = getattr(self, attr)
                 if isinstance(value, Serializable):
@@ -142,15 +188,15 @@ class Field(Serializable):
                     value = date_to_str(value)
                 if value or isinstance(value, (bool, int)):
                     d[prefix + attr] = value
-        if hasattr(self, 'display') and self.display:
-            d['display'] = self.display
+        if hasattr(self, "display") and self.display:
+            d["display"] = self.display
         return d
 
 
 class Gender(Field):
-    children = ('content',)
+    children = ("content",)
 
-    genders = set(['male', 'female'])
+    genders = set(["male", "female"])
 
     def __init__(self, content=None, *args, **kwargs):
         """
@@ -189,7 +235,8 @@ class Ethnicity(Field):
         'korean', 'viatnamese', 'native_hawaiian', 'guamanian',
         'chamorro', 'samoan', 'other_pacific_islander', 'other'.
     """
-    children = ('content',)
+
+    children = ("content",)
 
     def __init__(self, content=None, *args, **kwargs):
         """
@@ -211,22 +258,35 @@ class Ethnicity(Field):
 class Name(Field):
     """A name of a person."""
 
-    attributes = ('type',)
-    children = ('prefix', 'first', 'middle', 'last', 'suffix', 'raw', 'display')
-    types_set = set(['present', 'maiden', 'former', 'alias', 'alternative', 'autogenerated'])
+    attributes = ("type",)
+    children = ("prefix", "first", "middle", "last", "suffix", "raw", "display")
+    types_set = set(
+        ["present", "maiden", "former", "alias", "alternative", "autogenerated"]
+    )
 
-    def __init__(self, prefix=None, first=None, middle=None, last=None,
-                 suffix=None, raw=None, display=None, type_=None, *args, **kwargs):
-        """`prefix`, `first`, `middle`, `last`, `suffix`, `raw`, `type_`, 
-        should all be unicode objects or utf8 encoded strs (will be decoded 
+    def __init__(
+        self,
+        prefix=None,
+        first=None,
+        middle=None,
+        last=None,
+        suffix=None,
+        raw=None,
+        display=None,
+        type_=None,
+        *args,
+        **kwargs,
+    ):
+        """`prefix`, `first`, `middle`, `last`, `suffix`, `raw`, `type_`,
+        should all be unicode objects or utf8 encoded strs (will be decoded
         automatically).
-        
+
         `raw` is an unparsed name like "Clark J. Kent", usefull when you
         want to search by name and don't want to work hard to parse it.
-        Note that in response data there's never name.raw, the names in 
-        the response are always parsed, this is only for querying with 
+        Note that in response data there's never name.raw, the names in
+        the response are always parsed, this is only for querying with
         an unparsed name.
-        
+
         `type_` is one of Name.types_set.
 
         """
@@ -242,40 +302,63 @@ class Name(Field):
 
     @property
     def is_searchable(self):
-        """A bool value that indicates whether the name is a valid name to 
+        """A bool value that indicates whether the name is a valid name to
         search by."""
-        first = alpha_chars(self.first or u(''))
-        last = alpha_chars(self.last or u(''))
-        raw = alpha_chars(self.raw or u(''))
+        first = alpha_chars(self.first or u(""))
+        last = alpha_chars(self.last or u(""))
+        raw = alpha_chars(self.raw or u(""))
         return len(first) >= 1 or len(last) >= 1 or len(raw) >= 1
 
 
 class Address(Field):
     """An address of a person."""
 
-    attributes = ('type',)
-    children = ('country', 'state', 'city', 'po_box', 'zip_code',
-                'street', 'house', 'apartment', 'raw', 'display')
-    types_set = set(['home', 'work', 'old'])
+    attributes = ("type",)
+    children = (
+        "country",
+        "state",
+        "city",
+        "po_box",
+        "zip_code",
+        "street",
+        "house",
+        "apartment",
+        "raw",
+        "display",
+    )
+    types_set = set(["home", "work", "old"])
 
-    def __init__(self, country=None, state=None, city=None, po_box=None,
-                 street=None, house=None, zip_code=None, apartment=None, raw=None,
-                 display=None, type_=None, *args, **kwargs):
-        """`country`, `state`, `city`, `po_box`, `street`, `house`, `apartment`, 
+    def __init__(
+        self,
+        country=None,
+        state=None,
+        city=None,
+        po_box=None,
+        street=None,
+        house=None,
+        zip_code=None,
+        apartment=None,
+        raw=None,
+        display=None,
+        type_=None,
+        *args,
+        **kwargs,
+    ):
+        """`country`, `state`, `city`, `po_box`, `street`, `house`, `apartment`,
         `raw`, `zip_code`, `display` and `type_` should all be unicode objects or utf8 encoded strs
         (will be decoded automatically).
-        
-        `country` and `state` are country code (like "US") and state code 
-        (like "NY"), note that the full value is available as 
+
+        `country` and `state` are country code (like "US") and state code
+        (like "NY"), note that the full value is available as
         address.country_full and address.state_full.
-        
-        `raw` is an unparsed address like "123 Marina Blvd, San Francisco, 
-        California, US", usefull when you want to search by address and don't 
+
+        `raw` is an unparsed address like "123 Marina Blvd, San Francisco,
+        California, US", usefull when you want to search by address and don't
         want to work hard to parse it.
-        Note that in response data there's never address.raw, the addresses in 
-        the response are always parsed, this is only for querying with 
+        Note that in response data there's never address.raw, the addresses in
+        the response are always parsed, this is only for querying with
         an unparsed address.
-        
+
         `type_` is one of Address.types_set.
 
         """
@@ -310,21 +393,25 @@ class Address(Field):
 
     @property
     def is_valid_state(self):
-        """A bool value that indicates whether the object's state is a valid 
+        """A bool value that indicates whether the object's state is a valid
         state code."""
-        return (self.is_valid_country and self.country.upper() in STATES and
-                self.state is not None and self.state.upper() in STATES[self.country.upper()])
+        return (
+            self.is_valid_country
+            and self.country.upper() in STATES
+            and self.state is not None
+            and self.state.upper() in STATES[self.country.upper()]
+        )
 
     @property
     def country_full(self):
         """unicode, the full name of the object's country.
-        
+
         >>> address = Address(country='FR')
         >>> address.country
         'FR'
         >>> address.country_full
         'France'
-        
+
         """
         if self.country:
             return COUNTRIES.get(self.country.upper())
@@ -332,13 +419,13 @@ class Address(Field):
     @property
     def state_full(self):
         """unicode, the full name of the object's state.
-        
+
         >>> address = Address(country='US', state='CO')
         >>> address.state
         'CO'
         >>> address.state_full
         'Colorado'
-        
+
         """
 
         if self.is_valid_state:
@@ -348,14 +435,35 @@ class Address(Field):
 class Phone(Field):
     """A phone number of a person."""
 
-    attributes = ('type', 'do_not_call', 'voip')
-    children = ('country_code', 'number', 'extension', 'raw', 'display', 'display_international')
-    types_set = set(['mobile', 'home_phone', 'home_fax', 'work_phone', 'work_fax', 'pager', 'voip'])
+    attributes = ("type", "do_not_call", "voip")
+    children = (
+        "country_code",
+        "number",
+        "extension",
+        "raw",
+        "display",
+        "display_international",
+    )
+    types_set = set(
+        ["mobile", "home_phone", "home_fax", "work_phone", "work_fax", "pager", "voip"]
+    )
 
-    def __init__(self, country_code=None, number=None, raw=None, extension=None, display=None,
-                 display_international=None, type_=None, do_not_call=None, voip=None, *args, **kwargs):
+    def __init__(
+        self,
+        country_code=None,
+        number=None,
+        raw=None,
+        extension=None,
+        display=None,
+        display_international=None,
+        type_=None,
+        do_not_call=None,
+        voip=None,
+        *args,
+        **kwargs,
+    ):
         """`country_code`, `number` and `extension` should all be int/long.
-        
+
         `type_` is one of Phone.types_set.
         `raw` is a raw phone number string
 
@@ -373,7 +481,7 @@ class Phone(Field):
 
     @property
     def is_searchable(self):
-        """A bool value that indicates whether the phone is a valid phone 
+        """A bool value that indicates whether the phone is a valid phone
         to search by."""
         return (self.number and self.country_code) or self.raw
 
@@ -381,31 +489,39 @@ class Phone(Field):
         """Extend Field.to_dict, take the display_international attribute."""
         d = Field.to_dict(self)
         if self.display_international:
-            d['display_international'] = self.display_international
+            d["display_international"] = self.display_international
         return d
 
 
 class Email(Field):
     """An email address of a person with the md5 of the address, might come
-    in some cases without the address itself and just the md5 (for privacy 
+    in some cases without the address itself and just the md5 (for privacy
     reasons).
-    
+
     """
 
-    attributes = ('type', 'disposable', 'email_provider')
-    children = ('address', 'address_md5')
-    types_set = set(['personal', 'work'])
+    attributes = ("type", "disposable", "email_provider")
+    children = ("address", "address_md5")
+    types_set = set(["personal", "work"])
     re_email = re.compile("^[a-zA-Z0-9'._%\-+]+@[a-zA-Z0-9._%\-]+\.[a-zA-Z]{2,24}$")
 
-    def __init__(self, address=None, address_md5=None, type_=None,
-                 disposable=None, email_provider=None, *args, **kwargs):
-        """`address`, `address_md5`, `type_` should be unicode objects or utf8 
+    def __init__(
+        self,
+        address=None,
+        address_md5=None,
+        type_=None,
+        disposable=None,
+        email_provider=None,
+        *args,
+        **kwargs,
+    ):
+        """`address`, `address_md5`, `type_` should be unicode objects or utf8
         encoded strs (will be decoded automatically).
-        
-        `disposable` is a bool, indicating whether this is an 
+
+        `disposable` is a bool, indicating whether this is an
         address from a disposable email service.
 
-        `email_provider` is a boolean indicating whether this email 
+        `email_provider` is a boolean indicating whether this email
         is provided by a public email provider (such as gmail, outlook.com, etc).
 
         `type_` is one of Email.types_set.
@@ -420,12 +536,12 @@ class Email(Field):
 
     @property
     def is_valid_email(self):
-        """A bool value that indicates whether the address is a valid 
+        """A bool value that indicates whether the address is a valid
         email address.
-        
-        Note that the check is done be matching to the regular expression 
+
+        Note that the check is done be matching to the regular expression
         at Email.re_email which is very basic and far from covering end-cases...
-        
+
         """
         return bool(self.address and Email.re_email.match(self.address))
 
@@ -437,31 +553,31 @@ class Email(Field):
 
     @property
     def username(self):
-        """unicode, the username part of the email or None if the email is 
+        """unicode, the username part of the email or None if the email is
         invalid.
-        
+
         >>> email = Email(address='clark.kent@example.com')
         >>> email.username
         'clark'
-        
+
         """
         if not self.is_valid_email:
             return
-        return self.address.split('@')[0]
+        return self.address.split("@")[0]
 
     @property
     def domain(self):
-        """unicode, the domain part of the email or None if the email is 
+        """unicode, the domain part of the email or None if the email is
         invalid.
-        
+
         >>> email = Email(address='clark.kent@example.com')
         >>> email.domain
         'example.com'
-        
+
         """
         if not self.is_valid_email:
             return
-        return self.address.split('@')[1]
+        return self.address.split("@")[1]
 
     @property
     def display(self):
@@ -470,21 +586,22 @@ class Email(Field):
 
 class Vehicle(Field):
     """
-        Vehicle information.
+    Vehicle information.
     """
 
-    children = ('vin', 'year', 'make', 'model', 'color', 'vehicle_type')
+    children = ("vin", "year", "make", "model", "color", "vehicle_type")
 
     def __init__(
-            self,
-            vin=None,
-            year=None,
-            make=None,
-            model=None,
-            color=None,
-            vehicle_type=None,
-            *args, **kwargs):
-
+        self,
+        vin=None,
+        year=None,
+        make=None,
+        model=None,
+        color=None,
+        vehicle_type=None,
+        *args,
+        **kwargs,
+    ):
         Field.__init__(self, *args, **kwargs)
         self.vin = vin
         self.year = year
@@ -513,10 +630,10 @@ class Vehicle(Field):
         vin_valid = True
         if vin:
             vin_valid = (
-                    len(vin) == 17
-                    and not set(vin.lower()).intersection({"i", "o", "q"})
-                    and vin.lower()[9] not in ("u", "z", "0")
-                    and vin.isalnum()
+                len(vin) == 17
+                and not set(vin.lower()).intersection({"i", "o", "q"})
+                and vin.lower()[9] not in ("u", "z", "0")
+                and vin.isalnum()
             )
             if vin_valid:
                 vin_valid = self.validate_vin_checksum(vin)
@@ -541,10 +658,12 @@ class Vehicle(Field):
         for digit, replacements in replace_map.items():
             for c in replacements:
                 vin = vin.replace(c, digit)
-        checksum = sum(int(num) * positional_weights[i] for i, num in enumerate(vin) if i != 8)
+        checksum = sum(
+            int(num) * positional_weights[i] for i, num in enumerate(vin) if i != 8
+        )
         checksum %= 11
         if checksum == 10:
-            checksum = 'x'
+            checksum = "x"
         return str(checksum) == check_digit
 
     @property
@@ -555,14 +674,22 @@ class Vehicle(Field):
 class Job(Field):
     """Job information of a person."""
 
-    children = ('title', 'organization', 'industry', 'date_range', 'display')
+    children = ("title", "organization", "industry", "date_range", "display")
 
-    def __init__(self, title=None, organization=None, industry=None, display=None,
-                 date_range=None, *args, **kwargs):
-        """`title`, `organization`, `industry`, should all be unicode objects 
+    def __init__(
+        self,
+        title=None,
+        organization=None,
+        industry=None,
+        display=None,
+        date_range=None,
+        *args,
+        **kwargs,
+    ):
+        """`title`, `organization`, `industry`, should all be unicode objects
         or utf8 encoded strs (will be decoded automatically).
-        
-        `date_range` is A DateRange object (piplapis.data.fields.DateRange), 
+
+        `date_range` is A DateRange object (piplapis.data.fields.DateRange),
         that's the time the person held this job.
 
         """
@@ -577,14 +704,15 @@ class Job(Field):
 class Education(Field):
     """Education information of a person."""
 
-    children = ('degree', 'school', 'date_range', 'display')
+    children = ("degree", "school", "date_range", "display")
 
-    def __init__(self, degree=None, school=None, date_range=None, display=None,
-                 *args, **kwargs):
-        """`degree` and `school` should both be unicode objects or utf8 encoded 
+    def __init__(
+        self, degree=None, school=None, date_range=None, display=None, *args, **kwargs
+    ):
+        """`degree` and `school` should both be unicode objects or utf8 encoded
         strs (will be decoded automatically).
-        
-        `date_range` is A DateRange object (piplapis.data.fields.DateRange), 
+
+        `date_range` is A DateRange object (piplapis.data.fields.DateRange),
         that's the time the person was studying.
 
         """
@@ -598,12 +726,12 @@ class Education(Field):
 class Image(Field):
     """A URL of an image of a person."""
 
-    children = ('url', 'thumbnail_token')
+    children = ("url", "thumbnail_token")
 
     def __init__(self, url=None, thumbnail_token=None, *args, **kwargs):
-        """`url` should be a unicode object or utf8 encoded str (will be decoded 
+        """`url` should be a unicode object or utf8 encoded str (will be decoded
         automatically).
-        
+
         `thumbnail_token` is used to create the URL for Pipl's thumbnail service.
 
         """
@@ -616,7 +744,9 @@ class Image(Field):
         """A bool value that indicates whether the image URL is a valid URL."""
         return bool(self.url and is_valid_url(self.url))
 
-    def get_thumbnail_url(self, width=100, height=100, zoom_face=True, favicon=True, use_https=False):
+    def get_thumbnail_url(
+        self, width=100, height=100, zoom_face=True, favicon=True, use_https=False
+    ):
         """
         This method creates a thumbnail URL for this image.
 
@@ -628,12 +758,27 @@ class Image(Field):
         :return: str, the thumbnail URL
         """
         if self.thumbnail_token:
-            return self.generate_redundant_thumbnail_url(self, None, width=width, height=height, zoom_face=zoom_face,
-                                                         favicon=favicon, use_https=use_https)
+            return self.generate_redundant_thumbnail_url(
+                self,
+                None,
+                width=width,
+                height=height,
+                zoom_face=zoom_face,
+                favicon=favicon,
+                use_https=use_https,
+            )
 
     @classmethod
-    def generate_redundant_thumbnail_url(cls, first_image, second_image, width=100, height=100, zoom_face=True,
-                                         favicon=True, use_https=False):
+    def generate_redundant_thumbnail_url(
+        cls,
+        first_image,
+        second_image,
+        width=100,
+        height=100,
+        zoom_face=True,
+        favicon=True,
+        use_https=False,
+    ):
         """
         This method creates a thumbnail URL with redundancy - if the first image is unavailable, the second will be used.
 
@@ -650,17 +795,30 @@ class Image(Field):
         if first_image is None and second_image is None:
             raise ValueError("Please provide at least one image.")
 
-        images_with_tokens = [x for x in (first_image, second_image) if x and x.thumbnail_token]
+        images_with_tokens = [
+            x for x in (first_image, second_image) if x and x.thumbnail_token
+        ]
         if len(images_with_tokens) == 0:
-            raise ValueError("You can only generate thumbnail URLs for image objects with a thumbnail token.")
+            raise ValueError(
+                "You can only generate thumbnail URLs for image objects with a thumbnail token."
+            )
 
         if len(images_with_tokens) == 1:
             tokens = images_with_tokens[0].thumbnail_token
         else:
-            tokens = ",".join([re.sub("&dsid=\d+", "", x.thumbnail_token) for x in images_with_tokens])
+            tokens = ",".join(
+                [re.sub("&dsid=\d+", "", x.thumbnail_token) for x in images_with_tokens]
+            )
 
-        thumb_url_base = "{}://thumb.pipl.com/image?".format("https" if use_https else "http")
-        params = {"height": height, "width": width, "favicon": favicon, "zoom_face": zoom_face}
+        thumb_url_base = "{}://thumb.pipl.com/image?".format(
+            "https" if use_https else "http"
+        )
+        params = {
+            "height": height,
+            "width": width,
+            "favicon": favicon,
+            "zoom_face": zoom_face,
+        }
         return thumb_url_base + urlencode(params) + "&tokens=" + tokens
 
     @property
@@ -669,14 +827,13 @@ class Image(Field):
 
 
 class OriginCountry(Field):
-    """An origin country of the person.
-    """
+    """An origin country of the person."""
 
-    children = ('country',)
+    children = ("country",)
 
     def __init__(self, country=None, *args, **kwargs):
-        """`country` is the country itself, it should be a unicode object or 
-        a utf8 encoded str (will be decoded automatically). Possible values are 
+        """`country` is the country itself, it should be a unicode object or
+        a utf8 encoded str (will be decoded automatically). Possible values are
         two-letter country codes.
 
         """
@@ -692,10 +849,10 @@ class OriginCountry(Field):
 class Language(Field):
     """A language the person is familiar with."""
 
-    children = ('language', 'region', 'display')
+    children = ("language", "region", "display")
 
     def __init__(self, language=None, region=None, display=None, *args, **kwargs):
-        """`language` and `region` should be unicode objects 
+        """`language` and `region` should be unicode objects
         or utf8 encoded strs (will be decoded automatically).
 
         """
@@ -707,15 +864,15 @@ class Language(Field):
 
 class Username(Field):
     """A username/screen-name associated with the person.
-    
-    Note that even though in many sites the username uniquely identifies one 
-    person it's not guarenteed, some sites allow different people to use the 
+
+    Note that even though in many sites the username uniquely identifies one
+    person it's not guarenteed, some sites allow different people to use the
     same username.
-    
+
     """
 
     def __init__(self, content=None, *args, **kwargs):
-        """`content` is the username itself, it should be a unicode object or 
+        """`content` is the username itself, it should be a unicode object or
         a utf8 encoded str (will be decoded automatically).
 
         """
@@ -728,21 +885,21 @@ class Username(Field):
 
     @property
     def is_searchable(self):
-        """A bool value that indicates whether the username is a valid username 
+        """A bool value that indicates whether the username is a valid username
         to search by."""
-        return len(alnum_chars(self.content or u(''))) >= 3
+        return len(alnum_chars(self.content or u(""))) >= 3
 
 
 class UserID(Field):
     """An ID associated with a person.
-    
-    The ID is a string that's used by the site to uniquely identify a person, 
+
+    The ID is a string that's used by the site to uniquely identify a person,
     it's guaranteed that in the site this string identifies exactly one person.
-    
+
     """
 
     def __init__(self, content=None, *args, **kwargs):
-        """`content` is the ID itself, it should be a unicode object or a utf8 
+        """`content` is the ID itself, it should be a unicode object or a utf8
         encoded str (will be decoded automatically).
 
         """
@@ -755,21 +912,25 @@ class UserID(Field):
 
     @property
     def is_searchable(self):
-        return self.content is not None and "@" in self.content and self.content.split("@")[0].strip() != "" \
-               and self.content.split("@")[1].strip() != ""
+        return (
+            self.content is not None
+            and "@" in self.content
+            and self.content.split("@")[0].strip() != ""
+            and self.content.split("@")[1].strip() != ""
+        )
 
 
 class DOB(Field):
     """Date-of-birth of A person.
-    Comes as a date-range (the exact date is within the range, if the exact 
+    Comes as a date-range (the exact date is within the range, if the exact
     date is known the range will simply be with start=end).
-    
+
     """
 
-    children = ('date_range', 'display')
+    children = ("date_range", "display")
 
     def __init__(self, date_range=None, display=None, *args, **kwargs):
-        """`date_range` is A DateRange object (piplapis.data.fields.DateRange), 
+        """`date_range` is A DateRange object (piplapis.data.fields.DateRange),
         the date-of-birth is within this range.
 
         """
@@ -784,11 +945,11 @@ class DOB(Field):
     @property
     def age(self):
         """int, the estimated age of the person.
-        
-        Note that A DOB object is based on a date-range and the exact date is 
-        usually unknown so for age calculation the the middle of the range is 
-        assumed to be the real date-of-birth. 
-        
+
+        Note that A DOB object is based on a date-range and the exact date is
+        usually unknown so for age calculation the the middle of the range is
+        assumed to be the real date-of-birth.
+
         """
         if self.date_range is None:
             return
@@ -820,7 +981,7 @@ class DOB(Field):
         :param birth_year: int. The year of birth.
         """
         if birth_year <= 0:
-            raise ValueError('birth_year must be positive')
+            raise ValueError("birth_year must be positive")
         date_range = DateRange.from_years_range(birth_year, birth_year)
         return DOB(date_range=date_range)
 
@@ -832,7 +993,7 @@ class DOB(Field):
         :param birth_date: datetime.date object, the date of birth.
         """
         if birth_date > datetime.date.today():
-            raise ValueError('birth_date can\'t be in the future')
+            raise ValueError("birth_date can't be in the future")
         date_range = DateRange(birth_date, birth_date)
         return DOB(date_range=date_range)
 
@@ -854,7 +1015,7 @@ class DOB(Field):
         :param start_age: int, the minimum age this person may be
         """
         if start_age < 0 or end_age < 0:
-            raise ValueError('start_age and end_age can\'t be negative')
+            raise ValueError("start_age and end_age can't be negative")
 
         if start_age > end_age:
             start_age, end_age = end_age, start_age
@@ -881,23 +1042,43 @@ class URL(Field):
     about the person, or a URL otherwise related to the person.
     """
 
-    attributes = ('category', 'sponsored', 'domain', 'name', 'source_id')
-    children = ('url',)
-    categories_set = set(['background_reports', 'contact_details', 'email_address',
-                          'media', 'personal_profiles', 'professional_and_business',
-                          'public_records', 'publications', 'school_and_classmates', 'web_pages'])
+    attributes = ("category", "sponsored", "domain", "name", "source_id")
+    children = ("url",)
+    categories_set = set(
+        [
+            "background_reports",
+            "contact_details",
+            "email_address",
+            "media",
+            "personal_profiles",
+            "professional_and_business",
+            "public_records",
+            "publications",
+            "school_and_classmates",
+            "web_pages",
+        ]
+    )
 
-    def __init__(self, url=None, category=None, sponsored=None,
-                 domain=None, name=None, source_id=None, *args, **kwargs):
+    def __init__(
+        self,
+        url=None,
+        category=None,
+        sponsored=None,
+        domain=None,
+        name=None,
+        source_id=None,
+        *args,
+        **kwargs,
+    ):
         """
         `url` is the URL address itself
         `domain` is the URL's domain
         `name` is the website name
         `category` is one of URL.categories_set
 
-        `url`, `category`, `domain` and `name` should all be unicode 
+        `url`, `category`, `domain` and `name` should all be unicode
         objects or utf8 encoded strs (will be decoded automatically).
-        
+
         `sponsored` is a boolean - whether the URL is sponsored or not
 
         """
@@ -932,7 +1113,7 @@ class Tag(Field):
 
     """
 
-    attributes = ('classification',)
+    attributes = ("classification",)
 
     def __init__(self, content=None, classification=None, *args, **kwargs):
         """`content` is the tag itself, both `content` and `classification`
@@ -951,17 +1132,17 @@ class Tag(Field):
 
 class DateRange(Serializable):
     """A time intervel represented as a range of two dates.
-    
+
     DateRange objects are used inside DOB, Job and Education objects.
-    
+
     """
 
     def __init__(self, start, end):
         """`start` and `end` are datetime.date objects, both are required.
-        
-        For creating a DateRange object for an exact date (like if exact 
+
+        For creating a DateRange object for an exact date (like if exact
         date-of-birth is known) just pass the same value for `start` and `end`.
-        
+
         """
         if (start and end) and start > end:
             start, end = end, start
@@ -974,20 +1155,20 @@ class DateRange(Serializable):
             return ""
         if self.end is None:
             return str(self.start)
-        return ' - '.join([str(self.start), str(self.end)])
+        return " - ".join([str(self.start), str(self.end)])
 
     def __repr__(self):
         """Return a representation of the object (a valid value for eval())."""
-        return 'DateRange(%s, %s)' % (repr(self.start), repr(self.end))
+        return "DateRange(%s, %s)" % (repr(self.start), repr(self.end))
 
     def __eq__(self, other):
-        """Bool, indicates whether `self` and `other` have exactly the same 
+        """Bool, indicates whether `self` and `other` have exactly the same
         start date and end date."""
         return repr(self) == repr(other)
 
     @property
     def is_exact(self):
-        """True if the object holds an exact date (start=end), 
+        """True if the object holds an exact date (start=end),
         False otherwise."""
         return (self.start and self.end) and (self.start == self.end)
 
@@ -1000,8 +1181,8 @@ class DateRange(Serializable):
 
     @property
     def years_range(self):
-        """A tuple of two ints - the year of the start date and the year of the 
-        end date. Returns None when there is only a start, or only an end date. """
+        """A tuple of two ints - the year of the start date and the year of the
+        end date. Returns None when there is only a start, or only an end date."""
         if not (self.start and self.end):
             return None
         return self.start.year, self.end.year
@@ -1021,10 +1202,10 @@ class DateRange(Serializable):
         """Transform the dict to a DateRange object.
         :param d: dict, the dictionary from which to create a DateRange object
         """
-        start = d.get('start')
-        end = d.get('end')
+        start = d.get("start")
+        end = d.get("end")
         if not (start or end):
-            raise ValueError('DateRange must have at least a start or an end date')
+            raise ValueError("DateRange must have at least a start or an end date")
         if start:
             start = str_to_date(start)
         if end:
@@ -1035,7 +1216,7 @@ class DateRange(Serializable):
         """Transform the date-range to a dict."""
         d = {}
         if self.start:
-            d['start'] = date_to_str(self.start)
+            d["start"] = date_to_str(self.start)
         if self.end:
-            d['end'] = date_to_str(self.end)
+            d["end"] = date_to_str(self.end)
         return d

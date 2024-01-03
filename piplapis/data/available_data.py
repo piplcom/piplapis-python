@@ -2,8 +2,7 @@ from piplapis.data.utils import Serializable
 
 
 class AvailableData(Serializable):
-
-    children = ('basic', 'premium')
+    children = ("basic", "premium")
 
     def __init__(self, basic=None, premium=None, *args, **kwargs):
         self.basic = basic
@@ -12,15 +11,15 @@ class AvailableData(Serializable):
     def to_dict(self):
         d = {}
         if self.basic is not None and type(self.basic) == FieldCount:
-            d['basic'] = self.basic.to_dict()
+            d["basic"] = self.basic.to_dict()
         if self.premium is not None and type(self.premium) == FieldCount:
-            d['premium'] = self.premium.to_dict()
+            d["premium"] = self.premium.to_dict()
         return d
 
     @classmethod
     def from_dict(cls, d):
-        basic = d.get('basic')
-        premium = d.get('premium')
+        basic = d.get("basic")
+        premium = d.get("premium")
         ins = cls()
         if basic is not None:
             ins.basic = FieldCount.from_dict(basic)
@@ -30,15 +29,58 @@ class AvailableData(Serializable):
 
 
 class FieldCount(Serializable):
-    children = ('addresses', 'ethnicities', 'emails', 'personal_emails', 'work_emails', 'dobs', 'genders', 'user_ids',
-                'social_profiles', 'educations', 'jobs', 'images', 'languages', 'origin_countries', 'names', 'phones',
-                'mobile_phones', 'landline_phones', 'voip_phones', 'relationships', 'usernames', 'vehicles')
+    children = (
+        "addresses",
+        "ethnicities",
+        "emails",
+        "personal_emails",
+        "work_emails",
+        "dobs",
+        "genders",
+        "user_ids",
+        "social_profiles",
+        "educations",
+        "jobs",
+        "images",
+        "languages",
+        "origin_countries",
+        "names",
+        "phones",
+        "mobile_phones",
+        "landline_phones",
+        "voip_phones",
+        "relationships",
+        "usernames",
+        "vehicles",
+    )
 
-    def __init__(self, addresses=None, ethnicities=None, emails=None, personal_emails=None, work_emails=None, dobs=None,
-                 genders=None, user_ids=None, social_profiles=None, educations=None, jobs=None, images=None,
-                 languages=None, origin_countries=None, names=None, phones=None, relationships=None,
-                 usernames=None, mobile_phones=None, landline_phones=None, voip_phones=None, vehicles=None,
-                 *args, **kwargs):
+    def __init__(
+        self,
+        addresses=None,
+        ethnicities=None,
+        emails=None,
+        personal_emails=None,
+        work_emails=None,
+        dobs=None,
+        genders=None,
+        user_ids=None,
+        social_profiles=None,
+        educations=None,
+        jobs=None,
+        images=None,
+        languages=None,
+        origin_countries=None,
+        names=None,
+        phones=None,
+        relationships=None,
+        usernames=None,
+        mobile_phones=None,
+        landline_phones=None,
+        voip_phones=None,
+        vehicles=None,
+        *args,
+        **kwargs
+    ):
         """
         A summary of the data within an API response
         :param addresses: int, the number of addresses
