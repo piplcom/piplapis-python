@@ -45,22 +45,22 @@ logger = logging.getLogger(__name__)
 
 class SearchAPIRequest(object):
     """A request to Pipl's Search API.
-    
+
     Building the request from the query parameters can be done in two ways:
-    
-    Option 1 - directly and quickly (for simple requests with only few 
+
+    Option 1 - directly and quickly (for simple requests with only few
                parameters):
-            
+
     >>> from piplapis.search import SearchAPIRequest
     >>> request = SearchAPIRequest(api_key='YOURKEY', email='clark.kent@example.com')
     >>> response = request.send()
-    
-    Option 2 - using the data-model (useful for more complex queries; for 
-               example, when there are multiple parameters of the same type 
-               such as few phones or a few addresses or when you'd like to use 
-               information beyond the usual identifiers such as name or email, 
+
+    Option 2 - using the data-model (useful for more complex queries; for
+               example, when there are multiple parameters of the same type
+               such as few phones or a few addresses or when you'd like to use
+               information beyond the usual identifiers such as name or email,
                information like education, job, relationships etc):
-            
+
     >>> from piplapis.search import SearchAPIRequest
     >>> from piplapis.data import Person, Name, Address, Job
     >>> fields = [Name(first='Clark', last='Kent'),
@@ -72,10 +72,10 @@ class SearchAPIRequest(object):
     >>> response = request.send()
 
     Sending the request and getting the response is very simple and can be done
-    by either making a blocking call to request.send() or by making 
-    a non-blocking call to request.send_async(callback) which sends the request 
+    by either making a blocking call to request.send() or by making
+    a non-blocking call to request.send_async(callback) which sends the request
     asynchronously.
-    
+
     You can also set various request flags:
     minimum_probability - a float between 0 and 1, to define what statistical confidence you need for inferred data.
     show_sources - string, either "all", "matching" or True. If not set, no sources will be shown.
@@ -86,14 +86,14 @@ class SearchAPIRequest(object):
     infer_persons - boolean (default False),  whether the API should return person responses made up solely from data inferred by statistical analysis.
     minimum_match - a float between 0 and 1, to define the minimum match under which possible persons will not be returned.
     that may be the person you're looking for)
-    live_feeds - boolean (default True), whether to use live data feeds. Can be turned off 
+    live_feeds - boolean (default True), whether to use live data feeds. Can be turned off
     for performance.
     """
 
-    HEADERS = {'User-Agent': 'piplapis/python/%s' % piplapis.__version__}
+    HEADERS = {"User-Agent": "piplapis/python/%s" % piplapis.__version__}
     DEFAULT_API_VERSION = 5
-    DEFAULT_BASE_URL = 'https://api.pipl.com/search/'
-    BASE_URL = os.environ.get('PIPL_SEARCH_API_URL', DEFAULT_BASE_URL)
+    DEFAULT_BASE_URL = "https://api.pipl.com/search/"
+    BASE_URL = os.environ.get("PIPL_SEARCH_API_URL", DEFAULT_BASE_URL)
 
     # The following are default settings for all request objects
     # You can set them once instead of passing them to the constructor every time
@@ -111,10 +111,22 @@ class SearchAPIRequest(object):
     default_response_class = None
 
     @classmethod
-    def set_default_settings(cls, api_key=None, minimum_probability=None, show_sources=None,
-                             minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=False,
-                             match_requirements=None, source_category_requirements=None, infer_persons=None,
-                             top_match=None, response_class=None, api_version=None):
+    def set_default_settings(
+        cls,
+        api_key=None,
+        minimum_probability=None,
+        show_sources=None,
+        minimum_match=None,
+        hide_sponsored=None,
+        live_feeds=None,
+        use_https=False,
+        match_requirements=None,
+        source_category_requirements=None,
+        infer_persons=None,
+        top_match=None,
+        response_class=None,
+        api_version=None,
+    ):
         cls.default_api_key = api_key
         cls.default_minimum_probability = minimum_probability
         cls.default_show_sources = show_sources
@@ -129,31 +141,62 @@ class SearchAPIRequest(object):
         cls.default_response_class = response_class
         cls.default_api_version = api_version or SearchAPIRequest.DEFAULT_API_VERSION
 
-    def __init__(self, api_key=None, first_name=None, middle_name=None,
-                 last_name=None, raw_name=None, email=None, phone=None, country_code=None,
-                 raw_phone=None, username=None, user_id=None, country=None, state=None, city=None, house=None,
-                 street=None, zip_code=None, raw_address=None, from_age=None, to_age=None, person=None, url=None,
-                 vin=None, search_pointer=None, minimum_probability=None, show_sources=None,
-                 minimum_match=None, hide_sponsored=None, live_feeds=None, use_https=None,
-                 match_requirements=None, source_category_requirements=None, infer_persons=None, top_match=None,
-                 response_class=None, api_version=None):
+    def __init__(
+        self,
+        api_key=None,
+        first_name=None,
+        middle_name=None,
+        last_name=None,
+        raw_name=None,
+        email=None,
+        phone=None,
+        country_code=None,
+        raw_phone=None,
+        username=None,
+        user_id=None,
+        country=None,
+        state=None,
+        city=None,
+        house=None,
+        street=None,
+        zip_code=None,
+        raw_address=None,
+        from_age=None,
+        to_age=None,
+        person=None,
+        url=None,
+        vin=None,
+        search_pointer=None,
+        minimum_probability=None,
+        show_sources=None,
+        minimum_match=None,
+        hide_sponsored=None,
+        live_feeds=None,
+        use_https=None,
+        match_requirements=None,
+        source_category_requirements=None,
+        infer_persons=None,
+        top_match=None,
+        response_class=None,
+        api_version=None,
+    ):
         """Initiate a new request object with given query params.
-        
-        Each request must have at least one searchable parameter, meaning 
-        a name (at least first and last name), email, phone or username. 
-        Multiple query params are possible (for example querying by both email 
+
+        Each request must have at least one searchable parameter, meaning
+        a name (at least first and last name), email, phone or username.
+        Multiple query params are possible (for example querying by both email
         and phone of the person).
-        
+
         Args:
-        
+
         :param api_key: str, a valid API key.
-                   Note that you can set a default API key 
-                   (piplapis.search.default_api_key = '<your_key>') instead of 
-                   passing it to each request object. 
+                   Note that you can set a default API key
+                   (piplapis.search.default_api_key = '<your_key>') instead of
+                   passing it to each request object.
         :param first_name: unicode, minimum 2 chars.
-        :param middle_name: unicode. 
+        :param middle_name: unicode.
         :param last_name: unicode, minimum 2 chars.
-        :param raw_name: unicode, an unparsed name containing at least a first name 
+        :param raw_name: unicode, an unparsed name containing at least a first name
                     and a last name.
         :param email: unicode.
         :param phone: int/long. A national phone with no formatting.
@@ -178,7 +221,7 @@ class SearchAPIRequest(object):
                   The person can contain every field allowed by the data-model
                   (see piplapis.data.fields) and can hold multiple fields of
                   the same type (for example: two emails, three addresses etc.)
-        :param search_pointer: str, sending a search pointer of a possible person will retrieve 
+        :param search_pointer: str, sending a search pointer of a possible person will retrieve
                           more data related to this person.
         :param minimum_probability: float (0-1). The minimum required confidence for inferred data.
         :param show_sources: str or bool, one of "matching"/"all". "all" will show all sources, "matching"
@@ -212,7 +255,9 @@ class SearchAPIRequest(object):
         if email:
             person.add_fields([Email(address=email)])
         if phone or raw_phone:
-            person.add_fields([Phone(country_code=country_code, number=phone, raw=raw_phone)])
+            person.add_fields(
+                [Phone(country_code=country_code, number=phone, raw=raw_phone)]
+            )
         if username:
             person.add_fields([Username(content=username)])
         if url:
@@ -220,7 +265,14 @@ class SearchAPIRequest(object):
         if user_id:
             person.add_fields([UserID(content=user_id)])
         if country or state or city or house or street or zip_code:
-            address = Address(country=country, state=state, city=city, house=house, street=street, zip_code=zip_code)
+            address = Address(
+                country=country,
+                state=state,
+                city=city,
+                house=house,
+                street=street,
+                zip_code=zip_code,
+            )
             person.add_fields([address])
         if raw_address:
             person.add_fields([Address(raw=raw_address)])
@@ -234,59 +286,110 @@ class SearchAPIRequest(object):
         self.person = person
 
         self.api_key = api_key or self.default_api_key
-        self.show_sources = show_sources if show_sources is not None else self.default_show_sources
-        self.live_feeds = live_feeds if live_feeds is not None else self.default_live_feeds
+        self.show_sources = (
+            show_sources if show_sources is not None else self.default_show_sources
+        )
+        self.live_feeds = (
+            live_feeds if live_feeds is not None else self.default_live_feeds
+        )
         self.minimum_match = minimum_match or self.default_minimum_match
         self.top_match = top_match or self.default_top_match
-        self.minimum_probability = minimum_probability or self.default_minimum_probability
-        self.hide_sponsored = hide_sponsored if hide_sponsored is not None else self.default_hide_sponsored
+        self.minimum_probability = (
+            minimum_probability or self.default_minimum_probability
+        )
+        self.hide_sponsored = (
+            hide_sponsored
+            if hide_sponsored is not None
+            else self.default_hide_sponsored
+        )
         self.match_requirements = match_requirements or self.default_match_requirements
-        self.source_category_requirements = source_category_requirements or self.default_source_category_requirements
+        self.source_category_requirements = (
+            source_category_requirements or self.default_source_category_requirements
+        )
         self.use_https = use_https if use_https is not None else self.default_use_https
-        self.infer_persons = infer_persons if infer_persons is not None else self.default_infer_persons
-        self.api_version = self._normalize_api_version(api_version or self.DEFAULT_API_VERSION)
+        self.infer_persons = (
+            infer_persons if infer_persons is not None else self.default_infer_persons
+        )
+        self.api_version = self._normalize_api_version(
+            api_version or self.DEFAULT_API_VERSION
+        )
 
         response_class = response_class or self.default_response_class
-        self.response_class = response_class if response_class and issubclass(response_class, SearchAPIResponse) \
+        self.response_class = (
+            response_class
+            if response_class and issubclass(response_class, SearchAPIResponse)
             else SearchAPIResponse
+        )
 
     def validate_query_params(self, strict=True):
-        """Check if the request is valid and can be sent, raise ValueError if 
+        """Check if the request is valid and can be sent, raise ValueError if
         not.
-        
+
         :param strict, boolean. If True, an exception is raised on every
         invalid query parameter, if False an exception is raised only when the search
         request cannot be performed because required query params are missing.
-        
+
         """
         if not self.api_key:
-            raise ValueError('API key is missing')
+            raise ValueError("API key is missing")
         if strict:
             if self.top_match and type(self.top_match) is not bool:
-                raise ValueError('top_match should be a boolean')
-            if self.minimum_match and (type(self.minimum_match) is not float or
-                                       self.minimum_match > 1 or self.minimum_match < 0):
-                raise ValueError('minimum_match should be a float between 0 and 1')
-            if self.hide_sponsored is not None and type(self.hide_sponsored) is not bool:
-                raise ValueError('hide_sponsored should be a boolean')
+                raise ValueError("top_match should be a boolean")
+            if self.minimum_match and (
+                type(self.minimum_match) is not float
+                or self.minimum_match > 1
+                or self.minimum_match < 0
+            ):
+                raise ValueError("minimum_match should be a float between 0 and 1")
+            if (
+                self.hide_sponsored is not None
+                and type(self.hide_sponsored) is not bool
+            ):
+                raise ValueError("hide_sponsored should be a boolean")
             if self.infer_persons is not None and type(self.infer_persons) is not bool:
-                raise ValueError('infer_persons should be a boolean')
+                raise ValueError("infer_persons should be a boolean")
             if self.live_feeds is not None and type(self.live_feeds) is not bool:
-                raise ValueError('live_feeds should be a boolean')
-            if self.match_requirements is not None and not isinstance(self.match_requirements, string_types):
-                raise ValueError('match_requirements should be an str or unicode object')
-            if self.source_category_requirements is not None and not isinstance(self.source_category_requirements,
-                                                                                string_types):
-                raise ValueError('source_category_requirements should be an str or unicode object')
-            if self.show_sources not in ("all", "matching", "false", "true", True, False, None):
-                raise ValueError('show_sources has a wrong value. Should be "matching", "all", True, False or None')
-            if self.minimum_probability and (type(self.minimum_probability) is not float or
-                                             self.minimum_probability > 1 or self.minimum_probability < 0):
-                raise ValueError('minimum_probability should be a float between 0 and 1')
+                raise ValueError("live_feeds should be a boolean")
+            if self.match_requirements is not None and not isinstance(
+                self.match_requirements, string_types
+            ):
+                raise ValueError(
+                    "match_requirements should be an str or unicode object"
+                )
+            if self.source_category_requirements is not None and not isinstance(
+                self.source_category_requirements, string_types
+            ):
+                raise ValueError(
+                    "source_category_requirements should be an str or unicode object"
+                )
+            if self.show_sources not in (
+                "all",
+                "matching",
+                "false",
+                "true",
+                True,
+                False,
+                None,
+            ):
+                raise ValueError(
+                    'show_sources has a wrong value. Should be "matching", "all", True, False or None'
+                )
+            if self.minimum_probability and (
+                type(self.minimum_probability) is not float
+                or self.minimum_probability > 1
+                or self.minimum_probability < 0
+            ):
+                raise ValueError(
+                    "minimum_probability should be a float between 0 and 1"
+                )
             if self.person.unsearchable_fields and not self.person.is_searchable:
-                raise ValueError('Some fields are unsearchable: %s' % self.person.unsearchable_fields)
+                raise ValueError(
+                    "Some fields are unsearchable: %s" % self.person.unsearchable_fields
+                )
         if not self.person.is_searchable:
-            raise ValueError('No valid name/username/user_id/phone/email/address/vin or search pointer in request')
+            raise ValueError(
+                "No valid name/username/user_id/phone/email/address/vin or search pointer in request"
+            )
 
     @property
     def url(self):
@@ -297,44 +400,44 @@ class SearchAPIRequest(object):
     def get_search_query(self):
         query = {"key": self.api_key}
         if self.person and self.person.search_pointer:
-            query['search_pointer'] = self.person.search_pointer
+            query["search_pointer"] = self.person.search_pointer
         elif self.person:
-            query['person'] = self.person.to_json()
+            query["person"] = self.person.to_json()
         if self.minimum_probability is not None:
-            query['minimum_probability'] = self.minimum_probability
+            query["minimum_probability"] = self.minimum_probability
         if self.minimum_match is not None:
-            query['minimum_match'] = self.minimum_match
+            query["minimum_match"] = self.minimum_match
         if self.top_match is not None:
-            query['top_match'] = self.top_match
+            query["top_match"] = self.top_match
         if self.hide_sponsored is not None:
-            query['hide_sponsored'] = self.hide_sponsored
+            query["hide_sponsored"] = self.hide_sponsored
         if self.infer_persons is not None:
-            query['infer_persons'] = self.infer_persons
+            query["infer_persons"] = self.infer_persons
         if self.match_requirements is not None:
-            query['match_requirements'] = self.match_requirements
+            query["match_requirements"] = self.match_requirements
         if self.source_category_requirements is not None:
-            query['source_category_requirements'] = self.source_category_requirements
+            query["source_category_requirements"] = self.source_category_requirements
         if self.live_feeds is not None:
-            query['live_feeds'] = self.live_feeds
+            query["live_feeds"] = self.live_feeds
         if self.show_sources is not None:
-            query['show_sources'] = self.show_sources
+            query["show_sources"] = self.show_sources
         return query
 
     def send(self, strict_validation=True):
         """Send the request and return the response or raise SearchAPIError.
-        
+
         calling this method blocks the program until the response is returned,
-        if you want the request to be sent asynchronously please refer to the 
-        send_async method. 
-        
+        if you want the request to be sent asynchronously please refer to the
+        send_async method.
+
         the response is returned as a SearchAPIResponse object.
-        
+
         :param strict_validation:  bool. Used by self.validate_query_params.
-        
+
         :raises ValueError (raised from validate_query_params),
-        httpError/URLError and SearchAPIError (when the response is returned 
+        httpError/URLError and SearchAPIError (when the response is returned
         but contains an error).
-        
+
         example:
         >>> from piplapis.search import SearchAPIRequest, SearchAPIError
         >>> request = SearchAPIRequest('YOURKEY', email='clark.kent@example.com')
@@ -349,13 +452,18 @@ class SearchAPIRequest(object):
         self.validate_query_params(strict=strict_validation)
 
         query = self.get_search_query()
-        request = urllib2.Request(url=self.get_base_url(), data=urlencode(query, True).encode(),
-                                  headers=SearchAPIRequest.HEADERS)
+        request = urllib2.Request(
+            url=self.get_base_url(),
+            data=urlencode(query, True).encode(),
+            headers=SearchAPIRequest.HEADERS,
+        )
         try:
             response = urllib2.urlopen(request)
             json_response = response.read().decode()
             search_response = self.response_class.from_json(json_response)
-            search_response._add_rate_limiting_headers(*self._get_quota_and_throttle_data(response.headers))
+            search_response._add_rate_limiting_headers(
+                *self._get_quota_and_throttle_data(response.headers)
+            )
             return search_response
         except urllib2.HTTPError as e:
             json_error = e.read()
@@ -363,76 +471,112 @@ class SearchAPIRequest(object):
                 raise e
             try:
                 exception = SearchAPIError.from_json(json_error.decode())
-                exception._add_rate_limiting_headers(*self._get_quota_and_throttle_data(e.headers))
+                exception._add_rate_limiting_headers(
+                    *self._get_quota_and_throttle_data(e.headers)
+                )
                 raise exception
             except ValueError:
                 raise e
 
     @staticmethod
     def _get_quota_and_throttle_data(headers):
-
         # Set default values
-        (quota_allotted, quota_current, quota_reset, qps_allotted, qps_current, qps_live_allotted, qps_live_current,
-         qps_demo_allotted, qps_demo_current, demo_usage_allotted, demo_usage_current, demo_usage_expiry, package_allotted, package_current, package_expiry) = (None,) * 15
+        (
+            quota_allotted,
+            quota_current,
+            quota_reset,
+            qps_allotted,
+            qps_current,
+            qps_live_allotted,
+            qps_live_current,
+            qps_demo_allotted,
+            qps_demo_current,
+            demo_usage_allotted,
+            demo_usage_current,
+            demo_usage_expiry,
+            package_allotted,
+            package_current,
+            package_expiry,
+        ) = (None,) * 15
 
         time_format = "%A, %B %d, %Y %I:%M:%S %p %Z"
 
         # Handle quota headers
-        if 'X-APIKey-Quota-Allotted' in headers:
-            quota_allotted = int(headers.get('X-APIKey-Quota-Allotted'))
-        if 'X-APIKey-Quota-Current' in headers:
-            quota_current = int(headers.get('X-APIKey-Quota-Current'))
-        if 'X-Quota-Reset' in headers:
-            datetime_str = headers.get('X-Quota-Reset')
-            quota_reset = datetime.datetime.strptime(datetime_str, time_format).replace(tzinfo=pytz.utc)
+        if "X-APIKey-Quota-Allotted" in headers:
+            quota_allotted = int(headers.get("X-APIKey-Quota-Allotted"))
+        if "X-APIKey-Quota-Current" in headers:
+            quota_current = int(headers.get("X-APIKey-Quota-Current"))
+        if "X-Quota-Reset" in headers:
+            datetime_str = headers.get("X-Quota-Reset")
+            quota_reset = datetime.datetime.strptime(datetime_str, time_format).replace(
+                tzinfo=pytz.utc
+            )
 
         # Handle throttling
-        if 'X-QPS-Allotted' in headers:
-            qps_allotted = int(headers.get('X-QPS-Allotted'))
-        if 'X-QPS-Current' in headers:
-            qps_current = int(headers.get('X-QPS-Current'))
-        if 'X-QPS-Live-Allotted' in headers:
-            qps_live_allotted = int(headers.get('X-QPS-Live-Allotted'))
-        if 'X-QPS-Live-Current' in headers:
-            qps_live_current = int(headers.get('X-QPS-Live-Current'))
-        if 'X-QPS-Demo-Allotted' in headers:
-            qps_demo_allotted = int(headers.get('X-QPS-Demo-Allotted'))
-        if 'X-QPS-Demo-Current' in headers:
-            qps_demo_current = int(headers.get('X-QPS-Demo-Current'))
+        if "X-QPS-Allotted" in headers:
+            qps_allotted = int(headers.get("X-QPS-Allotted"))
+        if "X-QPS-Current" in headers:
+            qps_current = int(headers.get("X-QPS-Current"))
+        if "X-QPS-Live-Allotted" in headers:
+            qps_live_allotted = int(headers.get("X-QPS-Live-Allotted"))
+        if "X-QPS-Live-Current" in headers:
+            qps_live_current = int(headers.get("X-QPS-Live-Current"))
+        if "X-QPS-Demo-Allotted" in headers:
+            qps_demo_allotted = int(headers.get("X-QPS-Demo-Allotted"))
+        if "X-QPS-Demo-Current" in headers:
+            qps_demo_current = int(headers.get("X-QPS-Demo-Current"))
 
         # Handle Demo usage allowance
-        if 'X-Demo-Usage-Allotted' in headers:
-            demo_usage_allotted = int(headers.get('X-Demo-Usage-Allotted'))
-        if 'X-Demo-Usage-Current' in headers:
-            demo_usage_current = int(headers.get('X-Demo-Usage-Current'))
-        if 'X-Demo-Usage-Expiry' in headers:
-            datetime_str = headers.get('X-Demo-Usage-Expiry')
-            demo_usage_expiry = datetime.datetime.strptime(datetime_str, time_format).replace(tzinfo=pytz.utc)
+        if "X-Demo-Usage-Allotted" in headers:
+            demo_usage_allotted = int(headers.get("X-Demo-Usage-Allotted"))
+        if "X-Demo-Usage-Current" in headers:
+            demo_usage_current = int(headers.get("X-Demo-Usage-Current"))
+        if "X-Demo-Usage-Expiry" in headers:
+            datetime_str = headers.get("X-Demo-Usage-Expiry")
+            demo_usage_expiry = datetime.datetime.strptime(
+                datetime_str, time_format
+            ).replace(tzinfo=pytz.utc)
 
         # Handle Package Usage
-        if 'X-Package-Allotted' in headers:
-            package_allotted = int(headers.get('X-Package-Allotted'))
-        if 'X-Package-Current' in headers:
-            package_current = int(headers.get('X-Package-Current'))
-        if 'X-Package-Expiry' in headers:
-            datetime_str = headers.get('X-Package-Expiry')
-            package_expiry = datetime.datetime.strptime(datetime_str, time_format).replace(tzinfo=pytz.utc)
+        if "X-Package-Allotted" in headers:
+            package_allotted = int(headers.get("X-Package-Allotted"))
+        if "X-Package-Current" in headers:
+            package_current = int(headers.get("X-Package-Current"))
+        if "X-Package-Expiry" in headers:
+            datetime_str = headers.get("X-Package-Expiry")
+            package_expiry = datetime.datetime.strptime(
+                datetime_str, time_format
+            ).replace(tzinfo=pytz.utc)
 
-        return (quota_allotted, quota_current, quota_reset, qps_allotted, qps_current, qps_live_allotted,
-                qps_live_current, qps_demo_allotted, qps_demo_current, demo_usage_allotted,
-                demo_usage_current, demo_usage_expiry, package_allotted, package_current, package_expiry)
+        return (
+            quota_allotted,
+            quota_current,
+            quota_reset,
+            qps_allotted,
+            qps_current,
+            qps_live_allotted,
+            qps_live_current,
+            qps_demo_allotted,
+            qps_demo_current,
+            demo_usage_allotted,
+            demo_usage_current,
+            demo_usage_expiry,
+            package_allotted,
+            package_current,
+            package_expiry,
+        )
 
     def send_async(self, callback, strict_validation=True):
         """Same as send() but in a non-blocking way.
-        
-        use this method if you want to send the request asynchronously so your 
+
+        use this method if you want to send the request asynchronously so your
         program can do other things while waiting for the response.
-        
+
         :param strict_validation: bool. Used by self.validate_query_params.
         :param callback: Callable with the following signature - callback(response=None, error=None).
-        
+
         example:
-        
+
         >>> from piplapis.search import SearchAPIRequest
         >>>
         >>> def my_callback(response=None, error=None):
@@ -485,7 +629,7 @@ class SearchAPIResponse(Serializable):
       a combination of identifiers that only lead to one person, such as
       "Clark Kent from Smallville, KS, US", you can expect to get
       a response containing a single person object.
-   
+
     - a list of possible persons (piplapis.data.containers.Person). If our identity-resolution
       engine did not find a definite match, you can use this list to further
       drill down using the persons' search_pointer field.
@@ -497,7 +641,7 @@ class SearchAPIResponse(Serializable):
       perfect match (only these are shown if the search contained show_sources=matching),
       or they may belong to possibly related people. In any case, by default API
       responses do not contain sources, and to use them you must pass a value for show_sources.
-   
+
     the response also contains the query as it was interpreted by Pipl. This
     part is useful for verification and debugging, if some query parameters
     were invalid you can see in response.query that they were ignored, you can
@@ -505,11 +649,24 @@ class SearchAPIResponse(Serializable):
     passed raw_name/raw_address in the query.
     """
 
-    def __init__(self, query=None, person=None, sources=None,
-                 possible_persons=None, warnings_=None, http_status_code=None,
-                 visible_sources=None, available_sources=None, search_id=None,
-                 match_requirements=None, available_data=None, source_category_requirements=None,
-                 persons_count=None, *args, **kwargs):
+    def __init__(
+        self,
+        query=None,
+        person=None,
+        sources=None,
+        possible_persons=None,
+        warnings_=None,
+        http_status_code=None,
+        visible_sources=None,
+        available_sources=None,
+        search_id=None,
+        match_requirements=None,
+        available_data=None,
+        source_category_requirements=None,
+        persons_count=None,
+        *args,
+        **kwargs,
+    ):
         """
         :param query: A Person object with the query as interpreted by Pipl.
         :param person: A Person object with data about the person in the query.
@@ -542,7 +699,9 @@ class SearchAPIResponse(Serializable):
         self.source_category_requirements = source_category_requirements
         self.persons_count = persons_count
         if not self.persons_count:
-            self.persons_count = 1 if self.person is not None else len(self.possible_persons)
+            self.persons_count = (
+                1 if self.person is not None else len(self.possible_persons)
+            )
         self.raw_json = None
 
         # Rate limiting data
@@ -556,7 +715,9 @@ class SearchAPIResponse(Serializable):
         self.quota_current = None  # The API quota used so far
         self.quota_reset = None  # The time when your quota resets
         self.demo_usage_allotted = None  # Your permitted demo queries
-        self.demo_usage_current = None  # The number of demo queries that you've already run
+        self.demo_usage_current = (
+            None  # The number of demo queries that you've already run
+        )
         self.demo_usage_expiry = None  # The expiry time of your demo usage
         self.package_allotted = None  # The total number of matches defined on the key.
         self.package_current = None  # The number of used matches.
@@ -565,15 +726,15 @@ class SearchAPIResponse(Serializable):
     @property
     def matching_sources(self):
         """Sources that match the person from the query.
-        Note that the meaning of "match the person from the query" means "Pipl 
-        is convinced that these sources hold data about the person you're 
-        looking for". 
+        Note that the meaning of "match the person from the query" means "Pipl
+        is convinced that these sources hold data about the person you're
+        looking for".
         Essentially, these are the sources that make up the Person object.
         """
-        return [source for source in self.sources if source.match == 1.]
+        return [source for source in self.sources if source.match == 1.0]
 
     def group_sources(self, key_function):
-        """Return a dict with the sources grouped by the key returned by 
+        """Return a dict with the sources grouped by the key returned by
         `key_function`.
 
         :param key_function: function, takes a source and returns the value from the source to
@@ -588,22 +749,22 @@ class SearchAPIResponse(Serializable):
 
     def group_sources_by_domain(self):
         """Return the sources grouped by the domain they came from.
-        
+
         :return dict, a key in this dict is a domain
         and the value is a list of all the sources with this domain.
-        
+
         """
-        key_function = lambda source: source.domain or ''
+        key_function = lambda source: source.domain or ""
         return self.group_sources(key_function)
 
     def group_sources_by_category(self):
-        """Return the sources grouped by their category. 
-        
+        """Return the sources grouped by their category.
+
         :return dict, a key in this dict is a category
         and the value is a list of all the sources with this category.
-        
+
         """
-        key_function = lambda source: source.category or ''
+        key_function = lambda source: source.category or ""
         return self.group_sources(key_function)
 
     def group_sources_by_match(self):
@@ -634,66 +795,76 @@ class SearchAPIResponse(Serializable):
         """Transform the dict to a response object and return the response.
         :param d: the API response dictionary
         """
-        http_status_code = d.get('@http_status_code')
-        visible_sources = d.get('@visible_sources')
-        available_sources = d.get('@available_sources')
-        warnings_ = d.get('warnings', [])
-        search_id = d.get('@search_id')
-        persons_count = d.get('@persons_count')
+        http_status_code = d.get("@http_status_code")
+        visible_sources = d.get("@visible_sources")
+        available_sources = d.get("@available_sources")
+        warnings_ = d.get("warnings", [])
+        search_id = d.get("@search_id")
+        persons_count = d.get("@persons_count")
 
-        match_requirements = d.get('match_requirements')
-        source_category_requirements = d.get('source_category_requirements')
+        match_requirements = d.get("match_requirements")
+        source_category_requirements = d.get("source_category_requirements")
 
-        available_data = d.get('available_data') or None
+        available_data = d.get("available_data") or None
         if available_data is not None:
             available_data = AvailableData.from_dict(available_data)
 
-        query = d.get('query') or None
+        query = d.get("query") or None
         if query is not None:
             query = Person.from_dict(query)
 
-        person = d.get('person') or None
+        person = d.get("person") or None
         if person is not None:
             person = Person.from_dict(person)
-        sources = d.get('sources')
+        sources = d.get("sources")
         if sources:
             sources = [Source.from_dict(source) for source in sources]
-        possible_persons = [Person.from_dict(x) for x in d.get('possible_persons', [])]
-        return cls(query=query, person=person, sources=sources,
-                   possible_persons=possible_persons, warnings_=warnings_,
-                   http_status_code=http_status_code, visible_sources=visible_sources,
-                   available_sources=available_sources, search_id=search_id,
-                   match_requirements=match_requirements, available_data=available_data,
-                   source_category_requirements=source_category_requirements,
-                   persons_count=persons_count)
+        possible_persons = [Person.from_dict(x) for x in d.get("possible_persons", [])]
+        return cls(
+            query=query,
+            person=person,
+            sources=sources,
+            possible_persons=possible_persons,
+            warnings_=warnings_,
+            http_status_code=http_status_code,
+            visible_sources=visible_sources,
+            available_sources=available_sources,
+            search_id=search_id,
+            match_requirements=match_requirements,
+            available_data=available_data,
+            source_category_requirements=source_category_requirements,
+            persons_count=persons_count,
+        )
 
     def to_dict(self):
         """Return a dict representation of the response."""
         d = {}
         if self.http_status_code:
-            d['@http_status_code'] = self.http_status_code
+            d["@http_status_code"] = self.http_status_code
         if self.visible_sources:
-            d['@visible_sources'] = self.visible_sources
+            d["@visible_sources"] = self.visible_sources
         if self.available_sources:
-            d['@available_sources'] = self.available_sources
+            d["@available_sources"] = self.available_sources
         if self.search_id:
-            d['@search_id'] = self.search_id
+            d["@search_id"] = self.search_id
         if self.persons_count:
-            d['@persons_count'] = self.persons_count
+            d["@persons_count"] = self.persons_count
         if self.warnings:
-            d['warnings'] = self.warnings
+            d["warnings"] = self.warnings
         if self.match_requirements:
-            d['match_requirements'] = self.match_requirements
+            d["match_requirements"] = self.match_requirements
         if self.available_data is not None:
-            d['available_data'] = self.available_data.to_dict()
+            d["available_data"] = self.available_data.to_dict()
         if self.query is not None:
-            d['query'] = self.query.to_dict()
+            d["query"] = self.query.to_dict()
         if self.person is not None:
-            d['person'] = self.person.to_dict()
+            d["person"] = self.person.to_dict()
         if self.sources:
-            d['sources'] = [source.to_dict() for source in self.sources]
+            d["sources"] = [source.to_dict() for source in self.sources]
         if self.possible_persons:
-            d['possible_persons'] = [person.to_dict() for person in self.possible_persons]
+            d["possible_persons"] = [
+                person.to_dict() for person in self.possible_persons
+            ]
         return d
 
     @property
@@ -718,7 +889,9 @@ class SearchAPIResponse(Serializable):
         A shortcut method to get the result's person's job.
         return Job
         """
-        return self.person.jobs[0] if self.person and len(self.person.jobs) > 0 else None
+        return (
+            self.person.jobs[0] if self.person and len(self.person.jobs) > 0 else None
+        )
 
     @property
     def address(self):
@@ -726,7 +899,11 @@ class SearchAPIResponse(Serializable):
         A shortcut method to get the result's person's address.
         return Address
         """
-        return self.person.addresses[0] if self.person and len(self.person.addresses) > 0 else None
+        return (
+            self.person.addresses[0]
+            if self.person and len(self.person.addresses) > 0
+            else None
+        )
 
     @property
     def education(self):
@@ -734,7 +911,11 @@ class SearchAPIResponse(Serializable):
         A shortcut method to get the result's person's education.
         return Education
         """
-        return self.person.educations[0] if self.person and len(self.person.educations) > 0 else None
+        return (
+            self.person.educations[0]
+            if self.person and len(self.person.educations) > 0
+            else None
+        )
 
     @property
     def language(self):
@@ -742,7 +923,11 @@ class SearchAPIResponse(Serializable):
         A shortcut method to get the result's person's spoken language.
         return Language
         """
-        return self.person.languages[0] if self.person and len(self.person.languages) > 0 else None
+        return (
+            self.person.languages[0]
+            if self.person and len(self.person.languages) > 0
+            else None
+        )
 
     @property
     def ethnicity(self):
@@ -750,7 +935,11 @@ class SearchAPIResponse(Serializable):
         A shortcut method to get the result's person's ethnicity.
         return Ethnicity
         """
-        return self.person.ethnicities[0] if self.person and len(self.person.ethnicities) > 0 else None
+        return (
+            self.person.ethnicities[0]
+            if self.person and len(self.person.ethnicities) > 0
+            else None
+        )
 
     @property
     def origin_country(self):
@@ -758,7 +947,11 @@ class SearchAPIResponse(Serializable):
         A shortcut method to get the result's person's origin country.
         return OriginCountry
         """
-        return self.person.origin_countries[0] if self.person and len(self.person.origin_countries) > 0 else None
+        return (
+            self.person.origin_countries[0]
+            if self.person and len(self.person.origin_countries) > 0
+            else None
+        )
 
     @property
     def phone(self):
@@ -766,7 +959,11 @@ class SearchAPIResponse(Serializable):
         A shortcut method to get the result's person's phone.
         return Phone
         """
-        return self.person.phones[0] if self.person and len(self.person.phones) > 0 else None
+        return (
+            self.person.phones[0]
+            if self.person and len(self.person.phones) > 0
+            else None
+        )
 
     @property
     def email(self):
@@ -774,7 +971,11 @@ class SearchAPIResponse(Serializable):
         A shortcut method to get the result's person's email.
         return Email
         """
-        return self.person.emails[0] if self.person and len(self.person.emails) > 0 else None
+        return (
+            self.person.emails[0]
+            if self.person and len(self.person.emails) > 0
+            else None
+        )
 
     @property
     def name(self):
@@ -782,7 +983,9 @@ class SearchAPIResponse(Serializable):
         A shortcut method to get the result's person's name.
         return Name
         """
-        return self.person.names[0] if self.person and len(self.person.names) > 0 else None
+        return (
+            self.person.names[0] if self.person and len(self.person.names) > 0 else None
+        )
 
     @property
     def image(self):
@@ -790,7 +993,11 @@ class SearchAPIResponse(Serializable):
         A shortcut method to get the result's person's image.
         return Image
         """
-        return self.person.images[0] if self.person and len(self.person.images) > 0 else None
+        return (
+            self.person.images[0]
+            if self.person and len(self.person.images) > 0
+            else None
+        )
 
     @property
     def url(self):
@@ -798,7 +1005,9 @@ class SearchAPIResponse(Serializable):
         A shortcut method to get the result's person's url.
         return URL
         """
-        return self.person.urls[0] if self.person and len(self.person.urls) > 0 else None
+        return (
+            self.person.urls[0] if self.person and len(self.person.urls) > 0 else None
+        )
 
     @property
     def username(self):
@@ -806,7 +1015,11 @@ class SearchAPIResponse(Serializable):
         A shortcut method to get the result's person's username.
         return Username
         """
-        return self.person.usernames[0] if self.person and len(self.person.usernames) > 0 else None
+        return (
+            self.person.usernames[0]
+            if self.person and len(self.person.usernames) > 0
+            else None
+        )
 
     @property
     def user_id(self):
@@ -814,7 +1027,11 @@ class SearchAPIResponse(Serializable):
         A shortcut method to get the result's person's user_id.
         return UserID
         """
-        return self.person.user_ids[0] if self.person and len(self.person.user_ids) > 0 else None
+        return (
+            self.person.user_ids[0]
+            if self.person and len(self.person.user_ids) > 0
+            else None
+        )
 
     @property
     def relationship(self):
@@ -822,17 +1039,34 @@ class SearchAPIResponse(Serializable):
         A shortcut method to get the result's person's most prominent relationship.
         return Relationship
         """
-        return self.person.relationships[0] if self.person and len(self.person.relationships) > 0 else None
+        return (
+            self.person.relationships[0]
+            if self.person and len(self.person.relationships) > 0
+            else None
+        )
 
     def add_quota_throttle_data(self, *args, **kwargs):
         logger.warn("SearchAPIResponse.add_quota_throttle_data is deprecated")
         return self._add_rate_limiting_headers(*args, **kwargs)
 
-    def _add_rate_limiting_headers(self, quota_allotted=None, quota_current=None, quota_reset=None, qps_allotted=None,
-                                   qps_current=None, qps_live_allotted=None, qps_live_current=None,
-                                   qps_demo_allotted=None, qps_demo_current=None, demo_usage_allotted=None,
-                                   demo_usage_current=None, demo_usage_expiry=None, package_allotted=None,
-                                   package_current=None, package_expiry=None):
+    def _add_rate_limiting_headers(
+        self,
+        quota_allotted=None,
+        quota_current=None,
+        quota_reset=None,
+        qps_allotted=None,
+        qps_current=None,
+        qps_live_allotted=None,
+        qps_live_current=None,
+        qps_demo_allotted=None,
+        qps_demo_current=None,
+        demo_usage_allotted=None,
+        demo_usage_current=None,
+        demo_usage_expiry=None,
+        package_allotted=None,
+        package_current=None,
+        package_expiry=None,
+    ):
         self.qps_allotted = qps_allotted
         self.qps_current = qps_current
         self.qps_live_allotted = qps_live_allotted
